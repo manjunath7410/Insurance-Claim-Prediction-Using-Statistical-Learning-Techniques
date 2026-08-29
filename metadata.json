@@ -1,0 +1,6 @@
+{
+  "name": "Insurance Claim Prediction Platform",
+  "description": "Statistical learning platform for insurance claim propensity, severity estimation, hurdle modeling, calibration analysis, and underwriting AI explainability.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

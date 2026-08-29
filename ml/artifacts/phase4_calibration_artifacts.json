@@ -1,0 +1,44 @@
+{
+  "model_id": "gradient_boosting_deviance",
+  "calibration_method": "Platt Scaling (Sigmoid Logistic)",
+  "platt_params": {
+    "a": 0.9873,
+    "b": 0.016
+  },
+  "selected_threshold": 0.08,
+  "metrics": {
+    "uncalibrated_brier": 0.0822,
+    "calibrated_brier": 0.0821,
+    "uncalibrated_log_loss": 0.3015,
+    "calibrated_log_loss": 0.3011,
+    "uncalibrated_ece": 0.0109,
+    "calibrated_ece": 0.0074,
+    "uncalibrated_mce": 0.0109,
+    "calibrated_mce": 0.0074,
+    "roc_auc": 0.65
+  },
+  "test_confusion_matrix_selected": {
+    "threshold": 0.08,
+    "true_positives": 5,
+    "false_positives": 39,
+    "true_negatives": 31,
+    "false_negatives": 2,
+    "precision": 0.1136,
+    "recall": 0.7143,
+    "specificity": 0.4429,
+    "f1_score": 0.1961,
+    "balanced_accuracy": 0.5786
+  },
+  "test_confusion_matrix_05": {
+    "threshold": 0.5,
+    "true_positives": 0,
+    "false_positives": 0,
+    "true_negatives": 70,
+    "false_negatives": 7,
+    "precision": 0.0,
+    "recall": 0.0,
+    "specificity": 1.0,
+    "f1_score": 0.0,
+    "balanced_accuracy": 0.5
+  }
+}
