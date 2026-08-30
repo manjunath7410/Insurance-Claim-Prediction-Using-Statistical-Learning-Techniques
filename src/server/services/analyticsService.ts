@@ -45,6 +45,10 @@ interface UnifiedRecord {
 }
 
 export class AnalyticsService {
+  private static cachedBenchmarkRecords: any[] | null = null;
+  private static analyticsCache = new Map<string, { data: AnalyticsDashboardResponse; expiresAt: number }>();
+  private static readonly CACHE_TTL_MS = 5000; // 5 second cache for aggregated portfolio queries
+
   /**
    * Generates a unified, filtered analytics response across dataset records,
    * live policies, claims, and persisted prediction events.
@@ -53,6 +57,12 @@ export class AnalyticsService {
     filters: AnalyticsFilterParams = {},
     userScope?: { id?: string; role?: string }
   ): AnalyticsDashboardResponse {
+    const cacheKey = JSON.stringify({ filters, userScope });
+    const cached = this.analyticsCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+
     const activeVersion = modelRegistry.getActiveVersion();
     const activeModel = modelRegistry.getModelByVersion(activeVersion);
     const activeThreshold = activeModel ? activeModel.decisionThreshold : 0.08;
@@ -90,7 +100,7 @@ export class AnalyticsService {
     // 11. Extract Data Quality Summary
     const dataQualitySummary = this.computeDataQualitySummary();
 
-    return {
+    const response: AnalyticsDashboardResponse = {
       overviewKpis,
       claimDistribution,
       riskDistribution,
@@ -106,6 +116,13 @@ export class AnalyticsService {
       dataProvenanceNote: 'Dataset calibrated on Casualty Actuarial Society (CAS) Motor Loss Distributions & live system predictions.',
       userRoleScope: userScope?.role || 'ANALYST',
     };
+
+    this.analyticsCache.set(cacheKey, {
+      data: response,
+      expiresAt: Date.now() + this.CACHE_TTL_MS,
+    });
+
+    return response;
   }
 
   // =========================================================================
@@ -116,8 +133,12 @@ export class AnalyticsService {
     const list: UnifiedRecord[] = [];
     const now = Date.now();
 
-    // 1. Ingest clean benchmark dataset records
-    const { cleanDataset } = runDataEngineeringPipeline(INITIAL_DATASET_RECORDS);
+    // 1. Ingest clean benchmark dataset records (memoized for high throughput)
+    if (!this.cachedBenchmarkRecords) {
+      const { cleanDataset } = runDataEngineeringPipeline(INITIAL_DATASET_RECORDS);
+      this.cachedBenchmarkRecords = cleanDataset;
+    }
+    const cleanDataset = this.cachedBenchmarkRecords;
     cleanDataset.forEach((rec, idx) => {
       // Deterministic timestamps spanning the last 60 days
       const daysAgo = (idx * 1.5) % 60;

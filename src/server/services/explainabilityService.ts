@@ -85,7 +85,7 @@ export interface PredictionExplanationResult {
   }>;
   underwritingGuidance: string;
   actuarialNotes: string;
-  source: 'gemini-3.7-flash' | 'rule-based-actuarial-engine';
+  source: 'gemini-2.5-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
   isFallback: boolean;
   promptVersion: string;
   confidenceNotice: string;
@@ -98,7 +98,7 @@ export interface UnderwritingDossierReport {
   predictionId: string;
   generatedAt: string;
   promptVersion: string;
-  source: 'gemini-3.7-flash' | 'rule-based-actuarial-engine';
+  source: 'gemini-2.5-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
   isFallback: boolean;
   sections: {
     executiveSummary: {
@@ -163,6 +163,68 @@ export interface UnderwritingDossierReport {
 
 export class ExplainabilityService {
   private static geminiClient: GoogleGenAI | null = null;
+  private static explanationCache = new Map<string, { data: PredictionExplanationResult; expiresAt: number }>();
+  private static reportCache = new Map<string, { data: UnderwritingDossierReport; expiresAt: number }>();
+  private static inflightExplanations = new Map<string, Promise<PredictionExplanationResult>>();
+  private static inflightReports = new Map<string, Promise<UnderwritingDossierReport>>();
+  private static circuitBreakerUntil = 0;
+  private static readonly CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache TTL
+  private static readonly MAX_CACHE_SIZE = 300;
+
+  private static formatGeminiErrorMessage(err: any): string {
+    if (!err) return 'Unknown error';
+    const msg = err.message || String(err);
+    try {
+      if (msg.startsWith('{') && msg.includes('"error"')) {
+        const parsed = JSON.parse(msg);
+        if (parsed?.error?.message) {
+          return `${parsed.error.message.split('\n')[0]} (Code: ${parsed.error.code || 429})`;
+        }
+      }
+    } catch {
+      // ignore JSON parse error
+    }
+    return msg.length > 200 ? `${msg.substring(0, 197)}...` : msg;
+  }
+
+  private static isQuotaOrRateLimitError(err: any): boolean {
+    if (!err) return false;
+    const msg = err.message || String(err);
+    return (
+      msg.includes('429') ||
+      msg.includes('RESOURCE_EXHAUSTED') ||
+      msg.includes('Quota exceeded') ||
+      msg.includes('rate-limit') ||
+      msg.includes('rate_limit') ||
+      msg.includes('exceeded your current quota')
+    );
+  }
+
+  private static getCacheKey(type: string, input: PredictionExplanationInput): string {
+    if (input.predictionId && !input.predictionId.startsWith('pred_synth_')) {
+      return `${type}:${input.predictionId}`;
+    }
+    const factorsHash = (input.topContributingFactors || [])
+      .map(f => `${f.feature}:${f.contributionScore.toFixed(3)}`)
+      .join('|');
+    const sanitized = this.sanitizeInput(input);
+    return `${type}:${input.probability.toFixed(4)}:${input.riskLevel}:${input.modelVersion || 'default'}:${sanitized.driverAge}:${sanitized.vehicleCategory}:${sanitized.annualMileage}:${factorsHash}`;
+  }
+
+  private static cleanupCache<T>(cache: Map<string, { data: T; expiresAt: number }>) {
+    const now = Date.now();
+    for (const [key, val] of cache.entries()) {
+      if (now > val.expiresAt) {
+        cache.delete(key);
+      }
+    }
+    if (cache.size > this.MAX_CACHE_SIZE) {
+      const oldestKeys = Array.from(cache.keys()).slice(0, cache.size - this.MAX_CACHE_SIZE);
+      for (const k of oldestKeys) {
+        cache.delete(k);
+      }
+    }
+  }
 
   /**
    * Lazy initialization of the Gemini SDK client with required headers
@@ -222,24 +284,39 @@ export class ExplainabilityService {
     input: PredictionExplanationInput,
     userContext?: { userId?: string; userEmail?: string; userRole?: string; ip?: string }
   ): Promise<PredictionExplanationResult> {
-    const start = Date.now();
-    const explanationId = `exp_act_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const predictionId = input.predictionId || `pred_synth_${Date.now()}`;
-    const sanitizedFeatures = this.sanitizeInput(input);
-    const modelProb = input.probability;
-    const probPercent = (modelProb * 100).toFixed(2);
-    const riskLevel = input.riskLevel;
-    const thresholdApplied = input.thresholdApplied ?? 0.08;
-    const modelName = input.modelName || 'Calibrated Gradient Boosted Trees';
-    const modelVersion = input.modelVersion || modelRegistry.getActiveVersion();
-    const topFactors = input.topContributingFactors || [];
+    const cacheKey = this.getCacheKey('exp', input);
+    this.cleanupCache(this.explanationCache);
 
-    const ai = this.getGeminiClient();
+    const cached = this.explanationCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      logger.debug('Returning cached actuarial explanation', { cacheKey });
+      return cached.data;
+    }
 
-    // If Gemini is available, attempt AI generation with timeout protection
-    if (ai) {
-      try {
-        const prompt = `You are an expert Casualty Actuary explaining an insurance claim risk prediction to an underwriter.
+    if (this.inflightExplanations.has(cacheKey)) {
+      return this.inflightExplanations.get(cacheKey)!;
+    }
+
+    const executionPromise = (async () => {
+      const start = Date.now();
+      const explanationId = `exp_act_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const predictionId = input.predictionId || `pred_synth_${Date.now()}`;
+      const sanitizedFeatures = this.sanitizeInput(input);
+      const modelProb = input.probability;
+      const probPercent = (modelProb * 100).toFixed(2);
+      const riskLevel = input.riskLevel;
+      const thresholdApplied = input.thresholdApplied ?? 0.08;
+      const modelName = input.modelName || 'Calibrated Gradient Boosted Trees';
+      const modelVersion = input.modelVersion || modelRegistry.getActiveVersion();
+      const topFactors = input.topContributingFactors || [];
+
+      const ai = this.getGeminiClient();
+      const isCircuitActive = Date.now() < ExplainabilityService.circuitBreakerUntil;
+
+      // If Gemini is available and not in active cooldown, attempt AI generation with timeout protection
+      if (ai && !isCircuitActive) {
+        try {
+          const prompt = `You are an expert Casualty Actuary explaining an insurance claim risk prediction to an underwriter.
 Your task is to interpret the PRE-CALCULATED statistical prediction below into a clear, concise natural-language explanation.
 
 STRICT INVARIANTS & CONSTRAINTS:
@@ -282,97 +359,120 @@ Respond ONLY with a valid JSON object matching this schema:
   "actuarialNotes": "Statistical context regarding calibration and portfolio base rate."
 }`;
 
-        // Set a timeout for the Gemini request (configurable or fast in test mode)
-        const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
-        const generatePromise = ai.models.generateContent({
-          model: 'gemini-3.7-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.2, // Low temperature for factual precision
-          },
-        });
-
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs)
-        );
-
-        const response: any = await Promise.race([generatePromise, timeoutPromise]);
-        const responseText = response.text || '';
-        
-        let parsed: any = null;
-        try {
-          parsed = JSON.parse(responseText);
-        } catch (jsonErr) {
-          logger.warn('Failed to parse Gemini JSON output, falling back to rule-based engine', { error: jsonErr });
-        }
-
-        if (parsed && typeof parsed.executiveSummary === 'string' && typeof parsed.naturalLanguageExplanation === 'string') {
-          // Output validation & guardrail checks: ensure probability is not altered in text
-          const validated = this.validateAndSanitizeAiOutput(parsed, input);
-
-          const durationMs = Date.now() - start;
-          this.logAiUsage({
-            action: 'AI_EXPLANATION_GENERATED',
-            predictionId,
-            modelVersion,
-            promptVersion: PROMPT_VERSION_EXPLAIN,
-            source: 'gemini-3.7-flash',
-            durationMs,
-            success: true,
-            isFallback: false,
-            userContext,
+          // Set a timeout for the Gemini request (configurable or fast in test mode)
+          const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
+          const generatePromise = ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.2, // Low temperature for factual precision
+            },
           });
 
-          return {
-            explanationId,
-            predictionId,
-            modelPrediction: {
-              probability: modelProb,
-              probabilityPercent: `${probPercent}%`,
-              riskLevel,
-              isClaimPredicted: Boolean(input.isClaimPredicted),
-              thresholdApplied,
-              modelName,
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs)
+          );
+
+          const response: any = await Promise.race([generatePromise, timeoutPromise]);
+          const responseText = response.text || '';
+          
+          let parsed: any = null;
+          try {
+            parsed = JSON.parse(responseText);
+          } catch (jsonErr) {
+            logger.warn('Failed to parse Gemini JSON output, falling back to rule-based engine', { error: jsonErr });
+          }
+
+          if (parsed && typeof parsed.executiveSummary === 'string' && typeof parsed.naturalLanguageExplanation === 'string') {
+            // Output validation & guardrail checks: ensure probability is not altered in text
+            const validated = this.validateAndSanitizeAiOutput(parsed, input);
+
+            const durationMs = Date.now() - start;
+            this.logAiUsage({
+              action: 'AI_EXPLANATION_GENERATED',
+              predictionId,
               modelVersion,
-            },
-            executiveSummary: validated.executiveSummary,
-            naturalLanguageExplanation: validated.naturalLanguageExplanation,
-            factorBreakdown: validated.factorBreakdown || this.buildFallbackFactorBreakdown(topFactors),
-            underwritingGuidance: validated.underwritingGuidance || this.buildFallbackUnderwritingGuidance(riskLevel, modelProb),
-            actuarialNotes: validated.actuarialNotes || `Model ${modelName} (${modelVersion}) calibrated using Platt Scaling against empirical portfolio base rate (5.0%).`,
-            source: 'gemini-3.7-flash',
-            isFallback: false,
-            promptVersion: PROMPT_VERSION_EXPLAIN,
-            confidenceNotice: 'AI-generated explanatory interpretation of authoritative statistical model output.',
-            disclaimer: 'This natural language summary is an interpretative aid generated by Gemini AI. The statistical ML model provides the authoritative numerical probability. Underwriting decisions require human review and full compliance with state regulatory standards.',
-            timestamp: new Date().toISOString(),
-          };
+              promptVersion: PROMPT_VERSION_EXPLAIN,
+              source: 'gemini-2.5-flash',
+              durationMs,
+              success: true,
+              isFallback: false,
+              userContext,
+            });
+
+            const result: PredictionExplanationResult = {
+              explanationId,
+              predictionId,
+              modelPrediction: {
+                probability: modelProb,
+                probabilityPercent: `${probPercent}%`,
+                riskLevel,
+                isClaimPredicted: Boolean(input.isClaimPredicted),
+                thresholdApplied,
+                modelName,
+                modelVersion,
+              },
+              executiveSummary: validated.executiveSummary,
+              naturalLanguageExplanation: validated.naturalLanguageExplanation,
+              factorBreakdown: validated.factorBreakdown || this.buildFallbackFactorBreakdown(topFactors),
+              underwritingGuidance: validated.underwritingGuidance || this.buildFallbackUnderwritingGuidance(riskLevel, modelProb),
+              actuarialNotes: validated.actuarialNotes || `Model ${modelName} (${modelVersion}) calibrated using Platt Scaling against empirical portfolio base rate (5.0%).`,
+              source: 'gemini-2.5-flash',
+              isFallback: false,
+              promptVersion: PROMPT_VERSION_EXPLAIN,
+              confidenceNotice: 'AI-generated explanatory interpretation of authoritative statistical model output.',
+              disclaimer: 'This natural language summary is an interpretative aid generated by Gemini AI. The statistical ML model provides the authoritative numerical probability. Underwriting decisions require human review and full compliance with state regulatory standards.',
+              timestamp: new Date().toISOString(),
+            };
+
+            this.explanationCache.set(cacheKey, {
+              data: result,
+              expiresAt: Date.now() + this.CACHE_TTL_MS,
+            });
+
+            return result;
+          }
+        } catch (geminiError: any) {
+          if (ExplainabilityService.isQuotaOrRateLimitError(geminiError)) {
+            ExplainabilityService.circuitBreakerUntil = Date.now() + 60_000;
+            logger.info('External AI rate limit reached; activated deterministic actuarial fallback circuit breaker for 60s.');
+          } else {
+            logger.warn('Gemini explanation generation unavailable, using deterministic actuarial fallback');
+          }
         }
-      } catch (geminiError: any) {
-        logger.warn('Gemini explanation generation failed, using deterministic actuarial fallback', {
-          error: geminiError?.message,
-        });
       }
+
+      // Deterministic Rule-Based Actuarial Fallback
+      const durationMs = Date.now() - start;
+      const fallbackResult = this.generateDeterministicExplanation(input, explanationId, predictionId);
+      
+      this.logAiUsage({
+        action: 'AI_EXPLANATION_FALLBACK',
+        predictionId,
+        modelVersion,
+        promptVersion: PROMPT_VERSION_EXPLAIN,
+        source: 'rule-based-actuarial-engine',
+        durationMs,
+        success: true,
+        isFallback: true,
+        userContext,
+      });
+
+      this.explanationCache.set(cacheKey, {
+        data: fallbackResult,
+        expiresAt: Date.now() + this.CACHE_TTL_MS,
+      });
+
+      return fallbackResult;
+    })();
+
+    this.inflightExplanations.set(cacheKey, executionPromise);
+    try {
+      return await executionPromise;
+    } finally {
+      this.inflightExplanations.delete(cacheKey);
     }
-
-    // Deterministic Rule-Based Actuarial Fallback
-    const durationMs = Date.now() - start;
-    const fallbackResult = this.generateDeterministicExplanation(input, explanationId, predictionId);
-    
-    this.logAiUsage({
-      action: 'AI_EXPLANATION_FALLBACK',
-      predictionId,
-      modelVersion,
-      promptVersion: PROMPT_VERSION_EXPLAIN,
-      source: 'rule-based-actuarial-engine',
-      durationMs,
-      success: true,
-      isFallback: true,
-      userContext,
-    });
-
-    return fallbackResult;
   }
 
   /**
@@ -382,29 +482,44 @@ Respond ONLY with a valid JSON object matching this schema:
     input: PredictionExplanationInput,
     userContext?: { userId?: string; userEmail?: string; userRole?: string; ip?: string }
   ): Promise<UnderwritingDossierReport> {
-    const start = Date.now();
-    const reportId = `rep_act_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    const predictionId = input.predictionId || `pred_rep_${Date.now()}`;
-    const sanitized = this.sanitizeInput(input);
-    const prob = input.probability;
-    const probFormatted = `${(prob * 100).toFixed(2)}%`;
-    const threshold = input.thresholdApplied ?? 0.08;
-    const thresholdFormatted = `${(threshold * 100).toFixed(2)}%`;
-    const riskLevel = input.riskLevel;
-    const modelName = input.modelName || 'Calibrated Gradient Boosted Trees';
-    const modelVersion = input.modelVersion || modelRegistry.getActiveVersion();
-    const topFactors = input.topContributingFactors || [];
-    const fin = input.financialMetrics || {};
+    const cacheKey = this.getCacheKey('rep', input);
+    this.cleanupCache(this.reportCache);
 
-    const expectedSeverity = fin.expectedSeverityUSD ?? Math.round(3800 + prob * 14000);
-    const purePremium = fin.purePremiumUSD ?? Math.round(prob * expectedSeverity);
-    const grossPremium = fin.recommendedGrossPremiumUSD ?? Math.round((purePremium + 150) / 0.72);
+    const cached = this.reportCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      logger.debug('Returning cached actuarial report', { cacheKey });
+      return cached.data;
+    }
 
-    const ai = this.getGeminiClient();
+    if (this.inflightReports.has(cacheKey)) {
+      return this.inflightReports.get(cacheKey)!;
+    }
 
-    if (ai) {
-      try {
-        const prompt = `You are a Senior Fellow of the Casualty Actuarial Society (FCAS). 
+    const executionPromise = (async () => {
+      const start = Date.now();
+      const reportId = `rep_act_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const predictionId = input.predictionId || `pred_rep_${Date.now()}`;
+      const sanitized = this.sanitizeInput(input);
+      const prob = input.probability;
+      const probFormatted = `${(prob * 100).toFixed(2)}%`;
+      const threshold = input.thresholdApplied ?? 0.08;
+      const thresholdFormatted = `${(threshold * 100).toFixed(2)}%`;
+      const riskLevel = input.riskLevel;
+      const modelName = input.modelName || 'Calibrated Gradient Boosted Trees';
+      const modelVersion = input.modelVersion || modelRegistry.getActiveVersion();
+      const topFactors = input.topContributingFactors || [];
+      const fin = input.financialMetrics || {};
+
+      const expectedSeverity = fin.expectedSeverityUSD ?? Math.round(3800 + prob * 14000);
+      const purePremium = fin.purePremiumUSD ?? Math.round(prob * expectedSeverity);
+      const grossPremium = fin.recommendedGrossPremiumUSD ?? Math.round((purePremium + 150) / 0.72);
+
+      const ai = this.getGeminiClient();
+      const isCircuitActive = Date.now() < ExplainabilityService.circuitBreakerUntil;
+
+      if (ai && !isCircuitActive) {
+        try {
+          const prompt = `You are a Senior Fellow of the Casualty Actuarial Society (FCAS). 
 Generate a comprehensive 7-section Actuarial Underwriting & Risk Dossier Report for the policy risk evaluation below.
 
 STRICT INVARIANTS:
@@ -446,134 +561,157 @@ Format your output as a strict JSON object with these sections:
   "humanInTheLoopRequirement": "Explicit statement regarding underwriter review requirement."
 }`;
 
-        const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
-        const generatePromise = ai.models.generateContent({
-          model: 'gemini-3.7-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-            temperature: 0.2,
-          },
-        });
-
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs)
-        );
-
-        const response: any = await Promise.race([generatePromise, timeoutPromise]);
-        const responseText = response.text || '';
-        const parsed = JSON.parse(responseText);
-
-        if (parsed && parsed.executiveSummary && typeof parsed.executiveSummary.content === 'string') {
-          const durationMs = Date.now() - start;
-          this.logAiUsage({
-            action: 'AI_REPORT_GENERATED',
-            predictionId,
-            modelVersion,
-            promptVersion: PROMPT_VERSION_REPORT,
-            source: 'gemini-3.7-flash',
-            durationMs,
-            success: true,
-            isFallback: false,
-            userContext,
+          const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
+          const generatePromise = ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.2,
+            },
           });
 
-          return {
-            reportId,
-            predictionId,
-            generatedAt: new Date().toISOString(),
-            promptVersion: PROMPT_VERSION_REPORT,
-            source: 'gemini-3.7-flash',
-            isFallback: false,
-            sections: {
-              executiveSummary: {
-                title: '1. Executive Summary',
-                content: parsed.executiveSummary.content,
-                summaryBullets: Array.isArray(parsed.executiveSummary.summaryBullets)
-                  ? parsed.executiveSummary.summaryBullets
-                  : [`Estimated claim probability: ${probFormatted}`, `Assigned Risk Tier: ${riskLevel}`, `Pure Premium: $${purePremium.toLocaleString()}`],
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Gemini API call timed out after ${timeoutMs}ms`)), timeoutMs)
+          );
+
+          const response: any = await Promise.race([generatePromise, timeoutPromise]);
+          const responseText = response.text || '';
+          const parsed = JSON.parse(responseText);
+
+          if (parsed && parsed.executiveSummary && typeof parsed.executiveSummary.content === 'string') {
+            const durationMs = Date.now() - start;
+            this.logAiUsage({
+              action: 'AI_REPORT_GENERATED',
+              predictionId,
+              modelVersion,
+              promptVersion: PROMPT_VERSION_REPORT,
+              source: 'gemini-2.5-flash',
+              durationMs,
+              success: true,
+              isFallback: false,
+              userContext,
+            });
+
+            const reportResult: UnderwritingDossierReport = {
+              reportId,
+              predictionId,
+              generatedAt: new Date().toISOString(),
+              promptVersion: PROMPT_VERSION_REPORT,
+              source: 'gemini-2.5-flash',
+              isFallback: false,
+              sections: {
+                executiveSummary: {
+                  title: '1. Executive Summary',
+                  content: parsed.executiveSummary.content,
+                  summaryBullets: Array.isArray(parsed.executiveSummary.summaryBullets)
+                    ? parsed.executiveSummary.summaryBullets
+                    : [`Estimated claim probability: ${probFormatted}`, `Assigned Risk Tier: ${riskLevel}`, `Pure Premium: $${purePremium.toLocaleString()}`],
+                },
+                prediction: {
+                  title: '2. Authoritative Model Prediction',
+                  claimProbability: prob,
+                  claimProbabilityFormatted: probFormatted,
+                  calibratedThreshold: threshold,
+                  calibratedThresholdFormatted: thresholdFormatted,
+                  thresholdStatus: prob >= threshold ? 'Above Decision Threshold (Review Required)' : 'Within Standard Tolerance',
+                  isClaimFlagged: Boolean(input.isClaimPredicted || prob >= threshold),
+                  pureRiskPremiumUSD: purePremium,
+                  expectedSeverityUSD: expectedSeverity,
+                  recommendedGrossPremiumUSD: grossPremium,
+                  authoritativeEngine: `${modelName} (${modelVersion})`,
+                },
+                riskLevel: {
+                  title: '3. Calibrated Risk Stratification',
+                  riskLevel,
+                  tierDescription: parsed.riskTierDescription || this.getTierDescription(riskLevel),
+                  portfolioPercentileRange: this.getPortfolioPercentile(riskLevel),
+                  underwritingAction: parsed.underwritingAction || this.getUnderwritingAction(riskLevel),
+                },
+                keyFactors: {
+                  title: '4. Key Contributing Risk Factors (SHAP Decomposed)',
+                  primaryRiskDrivers: topFactors.map((f) => ({
+                    name: f.label || f.feature,
+                    observedValue: String(f.value ?? 'Standard'),
+                    direction: f.impact === 'INCREASES_RISK' ? 'Increases Expected Frequency' : f.impact === 'DECREASES_RISK' ? 'Decreases Expected Frequency' : 'Neutral Influence',
+                    attributionScore: f.contributionScore,
+                    actuarialExplanation: f.explanation || `${f.label || f.feature} influences portfolio baseline claim propensity.`,
+                  })),
+                  netRiskDirection: prob >= threshold ? 'Elevated Propensity Driver' : 'Favorable Standard Risk',
+                },
+                modelInformation: {
+                  title: '5. Model Governance & Provenance',
+                  modelName,
+                  modelVersion,
+                  modelType: 'Supervised Gradient Boosted Decision Tree + Hurdle Poisson Link',
+                  calibrationMethod: 'Platt Scaling (Sigmoid Transform, ECE = 0.016)',
+                  rocAucBenchmark: 0.812,
+                  brierScoreBenchmark: 0.043,
+                  trainingDataProvenance: 'Synthetically Calibrated against Casualty Actuarial Society (CAS) Standard French Motor Loss Benchmark',
+                  governanceStatus: 'Production Approved (0% Target Leakage Verified)',
+                },
+                limitations: {
+                  title: '6. Actuarial Limitations & Model Bounds',
+                  items: Array.isArray(parsed.limitations) && parsed.limitations.length > 0
+                    ? parsed.limitations
+                    : this.getDefaultLimitations(),
+                },
+                importantDisclaimer: {
+                  title: '7. Regulatory & Human-in-the-Loop Disclaimer',
+                  notice: 'This report provides automated interpretative commentary generated by Gemini AI. The statistical ML model provides the authoritative numerical probability.',
+                  humanInTheLoopRequirement: parsed.humanInTheLoopRequirement || 'Licensed underwriter approval is mandatory prior to formal quote issuance, binder execution, or adverse underwriting action.',
+                  regulatoryNotice: 'Model rating factors comply with state anti-discrimination insurance statutes. Direct socio-demographic redlining proxies are strictly excluded.',
+                },
               },
-              prediction: {
-                title: '2. Authoritative Model Prediction',
-                claimProbability: prob,
-                claimProbabilityFormatted: probFormatted,
-                calibratedThreshold: threshold,
-                calibratedThresholdFormatted: thresholdFormatted,
-                thresholdStatus: prob >= threshold ? 'Above Decision Threshold (Review Required)' : 'Within Standard Tolerance',
-                isClaimFlagged: Boolean(input.isClaimPredicted || prob >= threshold),
-                pureRiskPremiumUSD: purePremium,
-                expectedSeverityUSD: expectedSeverity,
-                recommendedGrossPremiumUSD: grossPremium,
-                authoritativeEngine: `${modelName} (${modelVersion})`,
-              },
-              riskLevel: {
-                title: '3. Calibrated Risk Stratification',
-                riskLevel,
-                tierDescription: parsed.riskTierDescription || this.getTierDescription(riskLevel),
-                portfolioPercentileRange: this.getPortfolioPercentile(riskLevel),
-                underwritingAction: parsed.underwritingAction || this.getUnderwritingAction(riskLevel),
-              },
-              keyFactors: {
-                title: '4. Key Contributing Risk Factors (SHAP Decomposed)',
-                primaryRiskDrivers: topFactors.map((f) => ({
-                  name: f.label || f.feature,
-                  observedValue: String(f.value ?? 'Standard'),
-                  direction: f.impact === 'INCREASES_RISK' ? 'Increases Expected Frequency' : f.impact === 'DECREASES_RISK' ? 'Decreases Expected Frequency' : 'Neutral Influence',
-                  attributionScore: f.contributionScore,
-                  actuarialExplanation: f.explanation || `${f.label || f.feature} influences portfolio baseline claim propensity.`,
-                })),
-                netRiskDirection: prob >= threshold ? 'Elevated Propensity Driver' : 'Favorable Standard Risk',
-              },
-              modelInformation: {
-                title: '5. Model Governance & Provenance',
-                modelName,
-                modelVersion,
-                modelType: 'Supervised Gradient Boosted Decision Tree + Hurdle Poisson Link',
-                calibrationMethod: 'Platt Scaling (Sigmoid Transform, ECE = 0.016)',
-                rocAucBenchmark: 0.812,
-                brierScoreBenchmark: 0.043,
-                trainingDataProvenance: 'Synthetically Calibrated against Casualty Actuarial Society (CAS) Standard French Motor Loss Benchmark',
-                governanceStatus: 'Production Approved (0% Target Leakage Verified)',
-              },
-              limitations: {
-                title: '6. Actuarial Limitations & Model Bounds',
-                items: Array.isArray(parsed.limitations) && parsed.limitations.length > 0
-                  ? parsed.limitations
-                  : this.getDefaultLimitations(),
-              },
-              importantDisclaimer: {
-                title: '7. Regulatory & Human-in-the-Loop Disclaimer',
-                notice: 'This report provides automated interpretative commentary generated by Gemini AI. The statistical ML model provides the authoritative numerical probability.',
-                humanInTheLoopRequirement: parsed.humanInTheLoopRequirement || 'Licensed underwriter approval is mandatory prior to formal quote issuance, binder execution, or adverse underwriting action.',
-                regulatoryNotice: 'Model rating factors comply with state anti-discrimination insurance statutes. Direct socio-demographic redlining proxies are strictly excluded.',
-              },
-            },
-          };
+            };
+
+            this.reportCache.set(cacheKey, {
+              data: reportResult,
+              expiresAt: Date.now() + this.CACHE_TTL_MS,
+            });
+
+            return reportResult;
+          }
+        } catch (err: any) {
+          if (ExplainabilityService.isQuotaOrRateLimitError(err)) {
+            ExplainabilityService.circuitBreakerUntil = Date.now() + 60_000;
+            logger.info('External AI rate limit reached; activated deterministic actuarial report fallback circuit breaker for 60s.');
+          } else {
+            logger.warn('Gemini report generation unavailable, using deterministic actuarial report fallback');
+          }
         }
-      } catch (err: any) {
-        logger.warn('Gemini report generation failed, using deterministic actuarial report fallback', {
-          error: err?.message,
-        });
       }
+
+      // Fallback Report Generation
+      const durationMs = Date.now() - start;
+      const fallbackReport = this.generateDeterministicReport(input, reportId, predictionId);
+      
+      this.logAiUsage({
+        action: 'AI_REPORT_FALLBACK',
+        predictionId,
+        modelVersion,
+        promptVersion: PROMPT_VERSION_REPORT,
+        source: 'rule-based-actuarial-engine',
+        durationMs,
+        success: true,
+        isFallback: true,
+        userContext,
+      });
+
+      this.reportCache.set(cacheKey, {
+        data: fallbackReport,
+        expiresAt: Date.now() + this.CACHE_TTL_MS,
+      });
+
+      return fallbackReport;
+    })();
+
+    this.inflightReports.set(cacheKey, executionPromise);
+    try {
+      return await executionPromise;
+    } finally {
+      this.inflightReports.delete(cacheKey);
     }
-
-    // Fallback Report Generation
-    const durationMs = Date.now() - start;
-    const fallbackReport = this.generateDeterministicReport(input, reportId, predictionId);
-    
-    this.logAiUsage({
-      action: 'AI_REPORT_FALLBACK',
-      predictionId,
-      modelVersion,
-      promptVersion: PROMPT_VERSION_REPORT,
-      source: 'rule-based-actuarial-engine',
-      durationMs,
-      success: true,
-      isFallback: true,
-      userContext,
-    });
-
-    return fallbackReport;
   }
 
   /**

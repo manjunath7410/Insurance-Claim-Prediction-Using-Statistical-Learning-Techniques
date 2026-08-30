@@ -1,10 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { ExplainabilityService, PROMPT_VERSION_EXPLAIN, PROMPT_VERSION_REPORT, PredictionExplanationInput } from '../services/explainabilityService';
 import { optionalAuthenticate } from '../middleware/authMiddleware';
+import { explainabilityRateLimiter } from '../middleware/rateLimiter';
 import { logger } from '../logger';
 import { config } from '../config';
 
 export const explainabilityRouter = Router();
+
+explainabilityRouter.use(explainabilityRateLimiter);
 
 /**
  * 1. Health check & configuration of Explainability AI layer

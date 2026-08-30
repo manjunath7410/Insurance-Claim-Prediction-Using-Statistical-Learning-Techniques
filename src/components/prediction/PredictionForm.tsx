@@ -864,32 +864,32 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
       </div>
 
       {/* Form Action Controls */}
-      <div className="flex items-center justify-between gap-3 pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
         <button
           type="button"
           onClick={onReset}
           disabled={isLoading}
-          className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition-colors disabled:opacity-50"
+          className="flex items-center space-x-1.5 px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition-colors disabled:opacity-50 focus:ring-2 focus:ring-slate-500"
         >
           <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset Form Defaults</span>
+          <span>Reset Defaults</span>
         </button>
 
         <button
           type="submit"
           id="btn-submit-prediction"
           disabled={isLoading}
-          className="flex-1 max-w-sm flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-blue-600/25 transition-all transform active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+          className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer focus:ring-2 focus:ring-blue-500"
         >
           {isLoading ? (
             <>
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               <span>Running Actuarial Inference...</span>
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4 text-blue-200" />
-              <span>Run Actuarial Claim Prediction</span>
+              <Sparkles className="w-4 h-4 text-white" />
+              <span>Evaluate Claim Propensity</span>
             </>
           )}
         </button>

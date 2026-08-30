@@ -9,6 +9,8 @@ import { runPhase7Tests } from './phase7_prediction_app.test';
 import { runPhase8AnalyticsDashboardTests } from './phase8_analytics_dashboard.test';
 import { runPhase9ExplainabilityTests } from './phase9_explainability.test';
 import { runPhase10ModelManagementTests } from './phase10_model_management.test';
+import { runPerformanceAndHardeningTests } from './performance.test';
+import { runPhase15DeploymentTests } from './phase15_deployment.test';
 
 console.log('===========================================================');
 console.log('INSURANCE RISK INTELLIGENCE PLATFORM - TEST SUITE RUNNER');
@@ -94,7 +96,7 @@ try {
   allErrors.push(`Phase 9 Explainability tests failed: ${err?.message}`);
 }
 
-console.log('\n[11/11] Running Phase 10 Model Management, Registry & Traceability Tests...');
+console.log('\n[11/12] Running Phase 10 Model Management, Registry & Traceability Tests...');
 try {
   const p10Results = await runPhase10ModelManagementTests();
   totalPassed += p10Results.passed;
@@ -104,6 +106,30 @@ try {
 } catch (err: any) {
   totalFailed += 1;
   allErrors.push(`Phase 10 Model Management tests failed: ${err?.message}`);
+}
+
+console.log('\n[12/13] Running Phase 12 Performance, Caching & Production Hardening Tests...');
+try {
+  const p12Results = await runPerformanceAndHardeningTests();
+  totalPassed += p12Results.passed;
+  totalFailed += p12Results.failed;
+  allErrors.push(...p12Results.errors);
+  console.log(`      Passed: ${p12Results.passed} | Failed: ${p12Results.failed}`);
+} catch (err: any) {
+  totalFailed += 1;
+  allErrors.push(`Phase 12 Performance & Hardening tests failed: ${err?.message}`);
+}
+
+console.log('\n[13/13] Running Phase 15 Production Deployment, Configuration & Health-Check Tests...');
+try {
+  const p15Results = await runPhase15DeploymentTests();
+  totalPassed += p15Results.passed;
+  totalFailed += p15Results.failed;
+  allErrors.push(...p15Results.errors);
+  console.log(`      Passed: ${p15Results.passed} | Failed: ${p15Results.failed}`);
+} catch (err: any) {
+  totalFailed += 1;
+  allErrors.push(`Phase 15 Production Deployment tests failed: ${err?.message}`);
 }
 
 console.log('\n===========================================================');

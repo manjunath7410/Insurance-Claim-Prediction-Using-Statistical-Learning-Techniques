@@ -407,7 +407,7 @@ apiRouter.get('/audit-logs', optionalAuthenticate, (req: Request, res: Response)
 });
 
 // 2. Production Prediction API Endpoint (Phase 5 & 6)
-apiRouter.post('/predictions', optionalAuthenticate, (req: Request, res: Response, next) => {
+apiRouter.post('/predictions', predictionRateLimiter, optionalAuthenticate, (req: Request, res: Response, next) => {
   try {
     const body = req.body;
     // Allow either direct top-level fields or nested under { input: ... }
@@ -463,9 +463,73 @@ apiRouter.post('/predictions', optionalAuthenticate, (req: Request, res: Respons
   }
 });
 
+// 2a. List Historical Predictions (for Prediction History & Audit UI)
+apiRouter.get('/predictions', optionalAuthenticate, (req: Request, res: Response) => {
+  try {
+    const limit = req.query.limit ? parseInt(String(req.query.limit), 10) : 50;
+    const offset = req.query.offset ? parseInt(String(req.query.offset), 10) : 0;
+    const dbResult = db.listPredictions({ limit, offset });
+
+    const formatted = dbResult.predictions.map((p) => {
+      const probPct = p.claimProbability * 100;
+      return {
+        id: p.id,
+        predictionId: p.predictionId,
+        policyId: p.policyId || `POL-${p.id.slice(-6).toUpperCase()}`,
+        timestamp: p.createdAt,
+        modelVersion: p.modelVersion,
+        modelName: p.modelName,
+        probability: p.claimProbability,
+        claimProbabilityPercent: probPct,
+        riskLevel: p.riskLevel,
+        isClaimPredicted: p.isClaimPredicted,
+        thresholdApplied: p.thresholdApplied,
+        input: {
+          age: p.inputSnapshot?.age || 35,
+          drivingExperienceYears: p.inputSnapshot?.drivingExperienceYears || 15,
+          creditScore: p.inputSnapshot?.creditScore || 720,
+          creditTier: p.inputSnapshot?.creditTier || 'Good (670-739)',
+          annualMileage: p.inputSnapshot?.annualMileage || 12000,
+          vehicleCategory: p.inputSnapshot?.vehicleCategory || 'Economy Sedan',
+          vehicleAge: p.inputSnapshot?.vehicleAge || 3,
+          vehicleValue: p.inputSnapshot?.vehicleValue || 25000,
+          regionalZone: p.inputSnapshot?.regionalZone || 'Suburban Moderate (Zone B)',
+          coverageTier: p.inputSnapshot?.coverageTier || 'Standard Comprehensive',
+          deductible: p.inputSnapshot?.deductible || 500,
+          priorClaimsLast5Years: p.inputSnapshot?.priorClaimsLast5Years ?? 0,
+          trafficViolationsCount: p.inputSnapshot?.trafficViolationsCount ?? 0,
+          antiTheftDevice: p.inputSnapshot?.antiTheftDevice ?? true,
+          policyTenureYears: p.inputSnapshot?.policyTenureYears ?? 3,
+          driverGender: p.inputSnapshot?.driverGender || 'Female',
+          maritalStatus: p.inputSnapshot?.maritalStatus || 'Married',
+          annualExposure: p.inputSnapshot?.annualExposure || 1.0,
+        },
+        output: {
+          claimProbabilityPercent: probPct,
+          claimProbability: p.claimProbability,
+          expectedSeverityUSD: p.expectedSeverityUSD || 3850,
+          purePremiumUSD: p.purePremiumUSD || Math.round(p.claimProbability * 3850 * 100) / 100,
+          recommendedGrossPremiumUSD: p.grossPremiumUSD || Math.round((p.claimProbability * 3850) / 0.7 * 100) / 100,
+          riskTier: p.riskLevel === 'LOW' ? 'Low Risk' : p.riskLevel === 'MEDIUM' ? 'Standard' : p.riskLevel === 'HIGH' ? 'Elevated' : 'High Risk',
+          riskScore: Math.round(probPct * 10),
+          underwritingRecommendation: probPct < 4 ? 'Accept with Discount' : probPct < 8 ? 'Accept Standard Rate' : probPct < 16 ? 'Accept with Surcharge' : 'Require Higher Deductible',
+        },
+        topContributingFactors: p.topAttributions || [],
+      };
+    });
+
+    res.json({
+      predictions: formatted,
+      total: dbResult.total,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: 'PredictionFetchError', message: error?.message });
+  }
+});
+
 // 2b. Legacy / Historical Statistical Prediction Endpoint
 
-apiRouter.post('/predict', validatePredictionInput, (req: Request, res: Response) => {
+apiRouter.post('/predict', predictionRateLimiter, validatePredictionInput, (req: Request, res: Response) => {
   try {
     const { input, selectedModel } = req.body as { input: PolicyholderInput; selectedModel?: ModelType };
     const modelToUse = selectedModel || 'gradient_boosting_tweedie';
