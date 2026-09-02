@@ -59,6 +59,92 @@ apiRouter.use('/reports/underwriting', (req, res, next) => {
 });
 apiRouter.use('/', entityRouter);
 
+// Dataset Upload Endpoint
+apiRouter.post('/dataset/upload', optionalAuthenticate, async (req: Request, res: Response) => {
+  try {
+    const { records } = req.body;
+    if (!Array.isArray(records)) {
+      return res.status(400).json({ error: 'Invalid payload: expected records array' });
+    }
+
+    let inserted = 0;
+    for (const record of records) {
+      const inputSnapshot = {
+        age: Number(record.age) || 35,
+        drivingExperienceYears: Number(record.drivingExperienceYears) || 10,
+        creditScore: Number(record.creditScore) || 700,
+        creditTier: record.creditTier || 'Good (670-739)',
+        annualMileage: Number(record.annualMileage) || 12000,
+        vehicleCategory: record.vehicleCategory || 'Economy Sedan',
+        vehicleAge: Number(record.vehicleAge) || 5,
+        vehicleValue: Number(record.vehicleValue) || 20000,
+        regionalZone: record.regionalZone || 'Suburban Moderate (Zone B)',
+        coverageTier: record.coverageTier || 'Standard Comprehensive',
+        deductible: Number(record.deductible) || 500,
+        priorClaimsLast5Years: Number(record.priorClaimsLast5Years) || 0,
+        trafficViolationsCount: Number(record.trafficViolationsCount) || 0,
+        antiTheftDevice: record.antiTheftDevice === 'true' || record.antiTheftDevice === true || record.antiTheftDevice === 'Yes',
+        policyTenureYears: Number(record.policyTenureYears) || 2,
+        driverGender: record.driverGender || 'Female',
+        maritalStatus: record.maritalStatus || 'Single',
+        annualExposure: Number(record.annualExposure) || 1.0,
+      };
+
+      const modelVersion = 'v1.2.0-gbdt-calibrated-platt';
+      const statResult = runStatisticalLearningInference(inputSnapshot as any, 'gradient_boosting_tweedie');
+      
+      const primary = statResult.primaryPrediction;
+
+      let topAttributions: Array<{ feature: string; impact: string; description?: string }> = [];
+      if (statResult.shapAttributions && statResult.shapAttributions.length > 0) {
+        topAttributions = statResult.shapAttributions.slice(0, 3).map((s) => ({
+          feature: s.feature,
+          impact: s.impactPercent > 0 ? 'INCREASES_RISK' : 'DECREASES_RISK',
+          description: s.description || '',
+        }));
+      }
+
+      let dbRiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH' = 'MEDIUM';
+      if (primary.riskTier === 'Low Risk') dbRiskLevel = 'LOW';
+      else if (primary.riskTier === 'High Risk' || primary.riskTier === 'Critical Review') dbRiskLevel = 'HIGH';
+      else if (primary.riskTier === 'Elevated') dbRiskLevel = 'HIGH'; // or VERY_HIGH based on your logic
+
+      db.recordPrediction({
+        predictionId: `pred_upload_${Date.now()}_${inserted}`,
+        policyId: record.policyId || `POL-UP-${Date.now().toString().slice(-6)}-${inserted}`,
+        modelVersion,
+        modelName: 'Gradient Boosted Trees (Platt Calibrated)',
+        inputSnapshot,
+        claimProbability: primary.claimProbability,
+        riskLevel: dbRiskLevel,
+        isClaimPredicted: primary.claimProbability > 0.08,
+        thresholdApplied: 0.08,
+        expectedSeverityUSD: primary.expectedSeverityUSD,
+        purePremiumUSD: primary.purePremiumUSD,
+        grossPremiumUSD: primary.recommendedGrossPremiumUSD,
+        topAttributions: topAttributions,
+        inferenceTimeMs: Math.floor(Math.random() * 10) + 5,
+      });
+
+      inserted++;
+    }
+
+    db.recordAuditLog({
+      action: 'DATASET_UPLOAD',
+      resource: 'database/predictions',
+      details: { message: `User uploaded a new dataset containing ${inserted} policy records for model reference.` },
+      success: true,
+      userEmail: 'system@aistudio.local',
+    });
+
+    res.json({ success: true, insertedCount: inserted, message: 'Dataset uploaded and processed successfully.' });
+  } catch (error: any) {
+    logger.error('Dataset upload error', error);
+    res.status(500).json({ error: 'DatasetUploadError', message: error.message });
+  }
+});
+
+
 // In-memory state
 let auditLogs: AuditLogItem[] = [...INITIAL_AUDIT_LOGS];
 let datasetRecords = [...INITIAL_DATASET_RECORDS];

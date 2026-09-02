@@ -7,6 +7,7 @@ import { ModelPerformancePage } from './components/pages/ModelPerformancePage';
 import { PredictionHistoryPage } from './components/pages/PredictionHistoryPage';
 import { ActuarialInsightsPage } from './components/pages/ActuarialInsightsPage';
 import { SettingsPage } from './components/pages/SettingsPage';
+import { DatasetUploadPage } from './components/pages/DatasetUploadPage';
 import { ModelType, PredictionResponse } from './types';
 
 // Modals
@@ -121,6 +122,8 @@ export default function App() {
             onLogDecision={handleLogDecision}
           />
         )}
+
+        {activeTab === 'dataset' && <DatasetUploadPage />}
 
         {activeTab === 'analytics' && <PortfolioAnalyticsPage />}
 

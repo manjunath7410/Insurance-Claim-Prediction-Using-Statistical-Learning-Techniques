@@ -6,6 +6,7 @@ import {
   Clock,
   Sparkles,
   Settings as SettingsIcon,
+  Database,
 } from 'lucide-react';
 import { TabType } from './Header';
 
@@ -24,6 +25,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'prediction', label: 'Predict', icon: Activity },
+    { id: 'dataset', label: 'Upload', icon: Database },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'models', label: 'Models', icon: Layers },
     { id: 'history', label: 'History', icon: Clock },

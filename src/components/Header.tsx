@@ -11,10 +11,11 @@ import {
   Moon,
   Monitor,
   BookOpen,
+  Database,
 } from 'lucide-react';
 import { ModelType } from '../types';
 
-export type TabType = 'prediction' | 'analytics' | 'models' | 'history' | 'actuarial' | 'settings';
+export type TabType = 'prediction' | 'dataset' | 'analytics' | 'models' | 'history' | 'actuarial' | 'settings';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'prediction', label: 'Prediction', icon: Activity },
+    { id: 'dataset', label: 'Dataset Upload', icon: Database },
     { id: 'analytics', label: 'Portfolio Analytics', icon: BarChart3 },
     { id: 'models', label: 'Model Performance', icon: Layers },
     { id: 'history', label: 'Prediction History', icon: Clock },
