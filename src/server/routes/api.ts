@@ -60,6 +60,11 @@ apiRouter.use('/explain', (req, res, next) => {
   req.url = '/explain';
   explainabilityRouter(req, res, next);
 });
+apiRouter.use('/customer-explain', (req, res, next) => {
+  // Alias /api/customer-explain to explainabilityRouter /customer-explain
+  req.url = '/customer-explain';
+  explainabilityRouter(req, res, next);
+});
 apiRouter.use('/reports/underwriting', (req, res, next) => {
   req.url = '/report';
   explainabilityRouter(req, res, next);
@@ -1130,15 +1135,19 @@ apiRouter.post('/audit-logs', optionalAuthenticate, (req: Request, res: Response
   }
 });
 
-// 7. Qualitative NLP Underwriting Memorandum (Gemini 3.7 Flash & 7-Section Dossier)
-apiRouter.post('/ai-underwriting-report', optionalAuthenticate, async (req: Request, res: Response) => {
+// 7. Qualitative NLP Underwriting Memorandum (Gemini 3.8 Flash & 7-Section Dossier)
+apiRouter.post(['/ai-underwriting-report', '/underwriting/dossier', '/underwriting-report'], optionalAuthenticate, async (req: Request, res: Response) => {
   try {
-    const { input, prediction, shapAttributions } = req.body;
+    const rawBody = req.body || {};
+    const input = rawBody.input || rawBody.predictionResponse?.input;
+    const prediction = rawBody.prediction || rawBody.predictionResponse?.primaryPrediction;
+    const shapAttributions = rawBody.shapAttributions || rawBody.predictionResponse?.shapAttributions;
     
     // Map input to ExplainabilityService
     const explainInput: PredictionExplanationInput = {
+      predictionId: rawBody.predictionId || rawBody.predictionResponse?.policyId || input?.id,
       probability: prediction?.claimProbabilityPercent ? prediction.claimProbabilityPercent / 100 : (prediction?.claimProbability ?? 0.05),
-      riskLevel: prediction?.riskTier ? (prediction.riskTier.toUpperCase().includes('LOW') ? 'LOW' : prediction.riskTier.toUpperCase().includes('ELEVATED') || prediction.riskTier.toUpperCase().includes('HIGH') ? 'HIGH' : prediction.riskTier.toUpperCase().includes('CRITICAL') ? 'VERY_HIGH' : 'MEDIUM') : 'LOW',
+      riskLevel: prediction?.riskTier ? (prediction.riskTier.toUpperCase().includes('LOW') || prediction.riskTier.toUpperCase().includes('PREFERRED') ? 'LOW' : prediction.riskTier.toUpperCase().includes('ELEVATED') || prediction.riskTier.toUpperCase().includes('HIGH') ? 'HIGH' : prediction.riskTier.toUpperCase().includes('CRITICAL') ? 'VERY_HIGH' : 'MEDIUM') : 'LOW',
       isClaimPredicted: prediction?.claimProbabilityPercent ? prediction.claimProbabilityPercent >= 8.0 : false,
       thresholdApplied: 0.08,
       modelVersion: prediction?.modelName || 'Gradient Boosted Trees (Calibrated)',

@@ -20,6 +20,51 @@ import { UserRole } from '../db/schema';
 
 export const PROMPT_VERSION_EXPLAIN = 'v1.2-actuarial-explain';
 export const PROMPT_VERSION_REPORT = 'v1.2-underwriting-dossier';
+export const PROMPT_VERSION_CUSTOMER_EXPLAIN = 'v1.0-customer-explanation';
+
+export interface CustomerExplanationInput {
+  predictionId?: string;
+  probability: number;
+  probabilityPercent: string;
+  riskCategory: 'lower' | 'moderate' | 'higher';
+  expectedSeverityUSD: number;
+  purePremiumUSD: number;
+  displayLikelihood: string;
+  displaySeverity: string;
+  displayRiskCost: string;
+  currency?: 'USD' | 'INR';
+  topFactors?: Array<{
+    title: string;
+    explanation: string;
+    icon?: string;
+  }>;
+  driverInputs?: {
+    driverAge?: number;
+    drivingExperienceYears?: number;
+    vehicleCategory?: string;
+    annualMileage?: number;
+    regionalZone?: string;
+    priorClaimsLast5Years?: number;
+    antiTheftDevice?: boolean;
+    creditScore?: number;
+    deductible?: number;
+  };
+}
+
+export interface CustomerExplanationResult {
+  title: string;
+  riskMeaning: string;
+  likelihoodMeaning: string;
+  severityMeaning: string;
+  factorsSummary: string;
+  whatToUnderstand: string;
+  reassuranceNotice: string;
+  source: 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
+  isFallback: boolean;
+  disclaimer: string;
+  timestamp: string;
+  fallbackNotice?: string;
+}
 
 export interface FactorAttributionInput {
   feature: string;
@@ -85,7 +130,7 @@ export interface PredictionExplanationResult {
   }>;
   underwritingGuidance: string;
   actuarialNotes: string;
-  source: 'gemini-2.5-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
+  source: 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
   isFallback: boolean;
   promptVersion: string;
   confidenceNotice: string;
@@ -98,7 +143,7 @@ export interface UnderwritingDossierReport {
   predictionId: string;
   generatedAt: string;
   promptVersion: string;
-  source: 'gemini-2.5-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
+  source: 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
   isFallback: boolean;
   sections: {
     executiveSummary: {
@@ -165,8 +210,10 @@ export class ExplainabilityService {
   private static geminiClient: GoogleGenAI | null = null;
   private static explanationCache = new Map<string, { data: PredictionExplanationResult; expiresAt: number }>();
   private static reportCache = new Map<string, { data: UnderwritingDossierReport; expiresAt: number }>();
+  private static customerExplanationCache = new Map<string, { data: CustomerExplanationResult; expiresAt: number }>();
   private static inflightExplanations = new Map<string, Promise<PredictionExplanationResult>>();
   private static inflightReports = new Map<string, Promise<UnderwritingDossierReport>>();
+  private static inflightCustomerExplanations = new Map<string, Promise<CustomerExplanationResult>>();
   private static circuitBreakerUntil = 0;
   private static readonly CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache TTL
   private static readonly MAX_CACHE_SIZE = 300;
@@ -363,7 +410,7 @@ Respond ONLY with a valid JSON object matching this schema:
           // Set a timeout for the Gemini request (configurable or fast in test mode)
           const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
           const generatePromise = ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             contents: prompt,
             config: {
               responseMimeType: 'application/json',
@@ -395,7 +442,7 @@ Respond ONLY with a valid JSON object matching this schema:
               predictionId,
               modelVersion,
               promptVersion: PROMPT_VERSION_EXPLAIN,
-              source: 'gemini-2.5-flash',
+              source: 'gemini-3.8-flash',
               durationMs,
               success: true,
               isFallback: false,
@@ -419,7 +466,7 @@ Respond ONLY with a valid JSON object matching this schema:
               factorBreakdown: validated.factorBreakdown || this.buildFallbackFactorBreakdown(topFactors),
               underwritingGuidance: validated.underwritingGuidance || this.buildFallbackUnderwritingGuidance(riskLevel, modelProb),
               actuarialNotes: validated.actuarialNotes || `Model ${modelName} (${modelVersion}) calibrated using Platt Scaling against empirical portfolio base rate (5.0%).`,
-              source: 'gemini-2.5-flash',
+              source: 'gemini-3.8-flash',
               isFallback: false,
               promptVersion: PROMPT_VERSION_EXPLAIN,
               confidenceNotice: 'AI-generated explanatory interpretation of authoritative statistical model output.',
@@ -564,7 +611,7 @@ Format your output as a strict JSON object with these sections:
 
           const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 5000;
           const generatePromise = ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.8-flash',
             contents: prompt,
             config: {
               responseMimeType: 'application/json',
@@ -587,7 +634,7 @@ Format your output as a strict JSON object with these sections:
               predictionId,
               modelVersion,
               promptVersion: PROMPT_VERSION_REPORT,
-              source: 'gemini-2.5-flash',
+              source: 'gemini-3.8-flash',
               durationMs,
               success: true,
               isFallback: false,
@@ -599,7 +646,7 @@ Format your output as a strict JSON object with these sections:
               predictionId,
               generatedAt: new Date().toISOString(),
               promptVersion: PROMPT_VERSION_REPORT,
-              source: 'gemini-2.5-flash',
+              source: 'gemini-3.8-flash',
               isFallback: false,
               sections: {
                 executiveSummary: {
@@ -1012,5 +1059,285 @@ This evaluation is an analytical probability for risk stratification and rate ad
     } catch (e) {
       logger.warn('Failed to log AI explainability audit event', { error: e });
     }
+  }
+
+  /**
+   * PHASE 6: Customer Explanation Assistant
+   * 
+   * Strict Architectural Invariants:
+   * 1. Gemini must NOT calculate, modify, override, or invent the quantitative prediction.
+   * 2. The existing statistical/ML engine remains the single source of truth for:
+   *    - Claim probability
+   *    - Expected claim severity
+   *    - Pure premium / estimated risk cost
+   *    - Model-derived feature contributions
+   * 3. Gemini should only explain the already-generated results in natural language.
+   * 4. The response covers:
+   *    - What the risk result means
+   *    - What the estimated claim likelihood means
+   *    - What the estimated claim amount means
+   *    - Which factors influenced the result
+   *    - What the user should understand about the estimate
+   *    - That the result is not a guarantee or final insurance quote
+   * 5. Gemini is strictly prohibited from altering numbers, inventing premiums,
+   *    making approval decisions, claiming certainty, or acting as an insurance carrier.
+   */
+  public static async generateCustomerExplanation(
+    input: CustomerExplanationInput,
+    userContext?: { userId?: string; userEmail?: string; userRole?: string; ip?: string }
+  ): Promise<CustomerExplanationResult> {
+    const cacheKey = `cust:${input.predictionId || 'anon'}:${input.riskCategory}:${input.displayLikelihood}:${input.displaySeverity}:${input.displayRiskCost}:${input.currency || 'INR'}`;
+    this.cleanupCache(this.customerExplanationCache);
+
+    const cached = this.customerExplanationCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return cached.data;
+    }
+
+    if (this.inflightCustomerExplanations.has(cacheKey)) {
+      return this.inflightCustomerExplanations.get(cacheKey)!;
+    }
+
+    const executionPromise = (async () => {
+      const start = Date.now();
+      const ai = this.getGeminiClient();
+      const isCircuitActive = Date.now() < ExplainabilityService.circuitBreakerUntil;
+
+      const riskCategoryLabel =
+        input.riskCategory === 'lower'
+          ? 'Lower Risk'
+          : input.riskCategory === 'moderate'
+          ? 'Moderate Risk'
+          : 'Higher Risk';
+
+      const factorsBulletList =
+        input.topFactors && input.topFactors.length > 0
+          ? input.topFactors.map(f => `- ${f.title}: ${f.explanation}`).join('\n')
+          : '- Key driving and vehicle characteristics compared to road safety benchmarks';
+
+      if (ai && !isCircuitActive) {
+        try {
+          const prompt = `You are a friendly, clear, and reassuring explanation assistant for an everyday customer reviewing their automobile insurance risk evaluation.
+A statistical machine learning and actuarial model has ALREADY calculated the user's risk metrics. The numerical values below are FINAL and AUTHORITATIVE.
+
+CRITICAL INVARIANTS - YOU MUST STRICTLY FOLLOW:
+1. DO NOT CALCULATE, MODIFY, OVERRIDE, OR INVENT ANY NUMERICAL PREDICTION.
+   - The statistical engine is the single source of truth.
+   - You must strictly refer ONLY to these pre-calculated values:
+     * Your Risk Category: ${riskCategoryLabel}
+     * Estimated Claim Likelihood: ${input.displayLikelihood}
+     * Estimated Claim Amount (if a claim happens): ${input.displaySeverity}
+     * Estimated Risk Cost: ${input.displayRiskCost}
+2. DO NOT change the numerical prediction or calculate a different claim probability.
+3. DO NOT invent an insurance premium or tell the user what they will have to pay.
+4. DO NOT make a final insurance approval or rejection decision.
+5. DO NOT claim certainty about future claims (always use probabilistic everyday terms, e.g. "statistical chance over a typical driving year").
+6. DO NOT present yourself as an insurance company or an underwriter issuing a binding policy.
+7. DO NOT give legal or financial guarantees.
+
+YOUR TASK:
+Explain these already-calculated results in simple, warm, everyday language suitable for a person with zero insurance or technical background.
+Keep the explanation short, clear, and reassuring without making promises.
+
+Provide clear explanations for these 6 specific items:
+1. riskMeaning: What the risk result (${riskCategoryLabel}) means in simple everyday terms compared to typical everyday drivers.
+2. likelihoodMeaning: What the estimated claim likelihood (${input.displayLikelihood}) means (the statistical chance of submitting a claim during a typical year of driving, based on historical data from similar driver profiles).
+3. severityMeaning: What the estimated claim amount (${input.displaySeverity}) means (an estimated average cost of repairs or damage IF an incident occurs, based on vehicle category and replacement costs; not an out-of-pocket bill).
+4. factorsSummary: Which factors influenced the result (refer directly to: ${factorsBulletList.replace(/\n/g, '; ')}).
+5. whatToUnderstand: What the user should understand about the estimate (that estimated risk cost of ${input.displayRiskCost} reflects the expected baseline claim cost for the period before administrative expenses, taxes, or discounts, and is an informational estimate rather than a final bill).
+6. reassuranceNotice: That this result is an estimate based on the provided information and historical statistics, and is not a guarantee of future claims or a final insurance quote.
+
+Respond ONLY with a valid JSON object matching this schema:
+{
+  "riskMeaning": "short paragraph",
+  "likelihoodMeaning": "short paragraph",
+  "severityMeaning": "short paragraph",
+  "factorsSummary": "short paragraph",
+  "whatToUnderstand": "short paragraph",
+  "reassuranceNotice": "short sentence confirming this is an estimate and not a guarantee or final quote"
+}`;
+
+          const timeoutMs = process.env.NODE_ENV === 'test' || process.env.VITEST ? 1500 : 6000;
+          const generatePromise = ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+              temperature: 0.2,
+            },
+          });
+
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`Gemini customer explanation timed out after ${timeoutMs}ms`)), timeoutMs)
+          );
+
+          const response: any = await Promise.race([generatePromise, timeoutPromise]);
+          const responseText = response.text || '';
+          let parsed: any = null;
+          try {
+            parsed = JSON.parse(responseText);
+          } catch (jsonErr) {
+            logger.warn('Failed to parse Gemini customer explanation JSON', { error: jsonErr });
+          }
+
+          if (
+            parsed &&
+            typeof parsed.riskMeaning === 'string' &&
+            typeof parsed.likelihoodMeaning === 'string' &&
+            typeof parsed.severityMeaning === 'string'
+          ) {
+            const sanitized = this.validateAndSanitizeCustomerAiOutput(parsed, input);
+
+            const result: CustomerExplanationResult = {
+              title: 'Help Me Understand',
+              riskMeaning: sanitized.riskMeaning,
+              likelihoodMeaning: sanitized.likelihoodMeaning,
+              severityMeaning: sanitized.severityMeaning,
+              factorsSummary: sanitized.factorsSummary,
+              whatToUnderstand: sanitized.whatToUnderstand,
+              reassuranceNotice: sanitized.reassuranceNotice,
+              source: 'gemini-3.8-flash',
+              isFallback: false,
+              disclaimer: 'This is an estimate based on the information provided and historical data. It is not a guarantee of future claims or a final insurance quote.',
+              timestamp: new Date().toISOString(),
+            };
+
+            this.customerExplanationCache.set(cacheKey, {
+              data: result,
+              expiresAt: Date.now() + this.CACHE_TTL_MS,
+            });
+
+            const durationMs = Date.now() - start;
+            this.logAiUsage({
+              action: 'CUSTOMER_EXPLANATION_GENERATED',
+              predictionId: input.predictionId || 'cust_pred',
+              modelVersion: 'customer-v1',
+              promptVersion: PROMPT_VERSION_CUSTOMER_EXPLAIN,
+              source: 'gemini-3.8-flash',
+              durationMs,
+              success: true,
+              isFallback: false,
+              userContext,
+            });
+
+            return result;
+          }
+        } catch (geminiError: any) {
+          if (ExplainabilityService.isQuotaOrRateLimitError(geminiError)) {
+            ExplainabilityService.circuitBreakerUntil = Date.now() + 60_000;
+            logger.info('External AI rate limit reached; activated deterministic customer explanation fallback for 60s.');
+          } else {
+            logger.warn('Gemini customer explanation unavailable, using deterministic actuarial fallback', { error: geminiError?.message });
+          }
+        }
+      }
+
+      // High-quality deterministic fallback
+      const fallbackResult = this.generateDeterministicCustomerExplanation(input);
+      this.customerExplanationCache.set(cacheKey, {
+        data: fallbackResult,
+        expiresAt: Date.now() + this.CACHE_TTL_MS,
+      });
+
+      const durationMs = Date.now() - start;
+      this.logAiUsage({
+        action: 'CUSTOMER_EXPLANATION_FALLBACK',
+        predictionId: input.predictionId || 'cust_pred',
+        modelVersion: 'customer-v1',
+        promptVersion: PROMPT_VERSION_CUSTOMER_EXPLAIN,
+        source: 'rule-based-actuarial-engine',
+        durationMs,
+        success: true,
+        isFallback: true,
+        userContext,
+      });
+
+      return fallbackResult;
+    })();
+
+    this.inflightCustomerExplanations.set(cacheKey, executionPromise);
+    try {
+      return await executionPromise;
+    } finally {
+      this.inflightCustomerExplanations.delete(cacheKey);
+    }
+  }
+
+  /**
+   * Deterministic customer explanation fallback when Gemini is offline or rate limited.
+   * Guarantees that the customer always receives clear, reassuring, and precise guidance
+   * referencing the exact pre-calculated quantitative predictions.
+   */
+  public static generateDeterministicCustomerExplanation(
+    input: CustomerExplanationInput
+  ): CustomerExplanationResult {
+    const riskCategory = input.riskCategory || 'moderate';
+
+    let riskMeaning = '';
+    if (riskCategory === 'lower') {
+      riskMeaning = `Your profile is evaluated as Lower Risk. Compared to average drivers on the road, your history and vehicle profile indicate a lower statistical probability of accidents or claims.`;
+    } else if (riskCategory === 'moderate') {
+      riskMeaning = `Your profile is evaluated as Moderate Risk. This is typical for everyday commuters and means your driving profile aligns closely with standard average road exposure.`;
+    } else {
+      riskMeaning = `Your profile is evaluated as Higher Risk. This reflects factors such as recent claim history, higher mileage exposure, or vehicle characteristics that statistically elevate claim propensity.`;
+    }
+
+    const likelihoodMeaning = `The estimated claim likelihood of ${input.displayLikelihood} represents the statistical chance that a claim might occur over a typical 12-month driving period. It is a probabilistic estimate derived from historical data of similar drivers, not a certainty.`;
+
+    const severityMeaning = `If an accident or covered loss does occur, the estimated average claim amount is ${input.displaySeverity}. This figure represents typical repair and replacement costs for vehicles in this class, rather than an out-of-pocket payment you must make.`;
+
+    let factorsSummary = '';
+    if (input.topFactors && input.topFactors.length > 0) {
+      const factorPhrases = input.topFactors.map(f => `${f.title} (${f.explanation.replace(/"/g, '')})`).join('; ');
+      factorsSummary = `Your result was primarily influenced by key factors including: ${factorPhrases}.`;
+    } else {
+      factorsSummary = `Your result was influenced by your driving record, vehicle characteristics, and annual mileage exposure compared to historical benchmarks.`;
+    }
+
+    const whatToUnderstand = `The estimated risk cost of ${input.displayRiskCost} is an actuarial estimate of expected claim costs for this coverage period. It is not necessarily the final insurance premium you would pay, which also accounts for taxes, administrative expenses, and chosen deductible options.`;
+
+    const reassuranceNotice = `This estimate is provided to help you understand your risk factors transparently. It is based on the information provided and historical statistics, and is not a guarantee of future claims or a final insurance quote.`;
+
+    return {
+      title: 'Help Me Understand',
+      riskMeaning,
+      likelihoodMeaning,
+      severityMeaning,
+      factorsSummary,
+      whatToUnderstand,
+      reassuranceNotice,
+      source: 'rule-based-actuarial-engine',
+      isFallback: true,
+      disclaimer: 'This is an estimate based on the information provided and historical data. It is not a guarantee of future claims or a final insurance quote.',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Validate and sanitize AI output for customer explanations
+   */
+  private static validateAndSanitizeCustomerAiOutput(output: any, input: CustomerExplanationInput): any {
+    const sanitized = { ...output };
+    const deterministic = this.generateDeterministicCustomerExplanation(input);
+
+    const clean = (txt: any, fallback: string) => {
+      if (typeof txt !== 'string' || txt.trim().length === 0) return fallback;
+      return txt
+        .replace(/will definitely happen/gi, 'has an estimated statistical likelihood')
+        .replace(/we will charge you/gi, 'the estimated risk cost is')
+        .replace(/your final premium is/gi, 'the estimated risk cost is')
+        .replace(/you are guaranteed/gi, 'it is estimated')
+        .replace(/your policy is approved/gi, 'based on this initial review')
+        .replace(/100% certainty/gi, 'elevated statistical probability');
+    };
+
+    sanitized.riskMeaning = clean(sanitized.riskMeaning, deterministic.riskMeaning);
+    sanitized.likelihoodMeaning = clean(sanitized.likelihoodMeaning, deterministic.likelihoodMeaning);
+    sanitized.severityMeaning = clean(sanitized.severityMeaning, deterministic.severityMeaning);
+    sanitized.factorsSummary = clean(sanitized.factorsSummary, deterministic.factorsSummary);
+    sanitized.whatToUnderstand = clean(sanitized.whatToUnderstand, deterministic.whatToUnderstand);
+    sanitized.reassuranceNotice = clean(sanitized.reassuranceNotice, deterministic.reassuranceNotice);
+
+    return sanitized;
   }
 }

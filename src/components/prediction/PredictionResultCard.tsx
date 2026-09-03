@@ -175,7 +175,7 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
       });
 
       if (!res.ok) {
-        throw new Error(`Failed to generate explanation (status ${res.status})`);
+        throw new Error('Explanation unavailable');
       }
 
       const data = await res.json();
@@ -183,7 +183,7 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
       setIsExplanationExpanded(true);
     } catch (err: any) {
       console.error('Explainability fetch error:', err);
-      setExplainError(err.message || 'Could not fetch explanation');
+      setExplainError("We couldn't generate the explanation right now, but your risk result is still available.");
     } finally {
       setIsExplaining(false);
     }
@@ -676,7 +676,7 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
                     AI Explainability & Actuarial Summary
                   </h3>
                   <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-purple-950 text-purple-300 border border-purple-800">
-                    {explanationData?.source === 'gemini-3.7-flash' ? 'Gemini 3.7 Flash' : 'Actuarial Rule Kernel'}
+                    {explanationData?.source?.includes('gemini') ? 'Gemini 3.8 Flash' : 'Actuarial Rule Kernel'}
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-400 font-mono">
@@ -727,7 +727,7 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
             <div className="py-6 flex flex-col items-center justify-center space-y-2">
               <div className="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
               <span className="text-xs text-slate-300 font-medium animate-pulse">
-                Synthesizing plain-language actuarial explanation...
+                Analyzing your information...
               </span>
             </div>
           ) : explainError ? (

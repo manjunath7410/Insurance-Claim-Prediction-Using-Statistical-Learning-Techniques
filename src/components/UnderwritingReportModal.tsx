@@ -35,7 +35,7 @@ interface CompleteDossier {
   predictionId: string;
   generatedAt: string;
   promptVersion: string;
-  source: 'gemini-3.7-flash' | 'rule-based-actuarial-engine';
+  source: 'gemini-3.8-flash' | 'gemini-3.7-flash' | 'rule-based-actuarial-engine' | string;
   isFallback: boolean;
   sections: {
     executiveSummary: {
@@ -296,7 +296,7 @@ export const UnderwritingReportModal: React.FC<UnderwritingReportModalProps> = (
             <span className="text-slate-500">→</span>
             <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30 text-[10px] flex items-center gap-1">
               <Sparkles className="w-2.5 h-2.5" />
-              EXPLANATORY LAYER: {dossier?.source === 'gemini-3.7-flash' ? 'Gemini 3.7 Flash' : 'Actuarial Rule Kernel'}
+              EXPLANATORY LAYER: {dossier?.source?.includes('gemini') ? 'Gemini 3.8 Flash' : 'Actuarial Rule Kernel'}
             </span>
           </div>
           <div className="text-[11px] text-slate-400 font-mono">

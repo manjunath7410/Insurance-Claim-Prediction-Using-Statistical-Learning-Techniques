@@ -32,14 +32,23 @@ interface AICopilotDrawerProps {
   currentPrediction?: PredictionResponse | null;
   onApplyExtractedPolicy?: (extracted: Partial<PolicyholderInput>) => void;
   initialPrompt?: string;
+  isProfessionalMode?: boolean;
 }
 
-const STARTER_PROMPTS = [
+const PRO_STARTER_PROMPTS = [
   '⚡ Young driver with 1 claim in urban zone',
   '🛡️ Experienced commuter with clean 5-year record',
   '💡 Why is claim probability calculated at this level?',
   '📉 How can this driver lower their pure premium?',
   '⚖️ What is the difference between GLM and Tweedie models?',
+];
+
+const CUSTOMER_STARTER_PROMPTS = [
+  '💡 Why is my estimated risk rating at this level?',
+  '📉 What are the easiest ways for me to lower my insurance rate?',
+  '🚗 How does my vehicle value affect repair cost estimates?',
+  '🛡️ Does installing a GPS anti-theft tracker save money?',
+  '🔍 What is the difference between deductible and premium?',
 ];
 
 export const AICopilotDrawer: React.FC<AICopilotDrawerProps> = ({
@@ -49,12 +58,15 @@ export const AICopilotDrawer: React.FC<AICopilotDrawerProps> = ({
   currentPrediction,
   onApplyExtractedPolicy,
   initialPrompt,
+  isProfessionalMode = false,
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       sender: 'assistant',
-      text: "👋 **Hi! I'm your AI Underwriting Copilot.**\n\nI combine Google Gemini with CAS actuarial risk formulas. You can:\n• **Type a scenario in plain English** (e.g. *\"22yo driver with $30k SUV in urban area and 1 claim\"*) to auto-populate the model.\n• **Ask underwriting questions** about risk scores, SHAP attributions, or pure premiums.\n• **Request discount strategies** to optimize policy retention.",
+      text: isProfessionalMode
+        ? "👋 **Hi! I'm your AI Underwriting Copilot.**\n\nI combine Google Gemini with CAS actuarial risk formulas. You can:\n• **Type a scenario in plain English** (e.g. *\"22yo driver with $30k SUV in urban area and 1 claim\"*) to auto-populate the model.\n• **Ask underwriting questions** about risk scores, SHAP attributions, or pure premiums.\n• **Request discount strategies** to optimize policy retention."
+        : "👋 **Hi! I'm your AI Insurance Assistant.**\n\nI'm here to help you understand your insurance results in plain, simple English.\n• **Ask about your risk score or claim likelihood**.\n• **Learn how to lower your estimated rate**.\n• **Ask any questions about deductibles, coverage, or vehicle factors**.",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       source: 'Gemini 3.8 Flash',
     },
@@ -351,7 +363,7 @@ export const AICopilotDrawer: React.FC<AICopilotDrawerProps> = ({
               </div>
               <div className="p-3.5 rounded-2xl rounded-bl-xs bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
-                <span>Copilot is analyzing risk parameters...</span>
+                <span>Analyzing your information...</span>
               </div>
             </div>
           )}
@@ -362,7 +374,7 @@ export const AICopilotDrawer: React.FC<AICopilotDrawerProps> = ({
         {/* Suggested Prompts Pills (Google / ChatGPT style) */}
         <div className="px-4 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50 overflow-x-auto no-scrollbar">
           <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-            {STARTER_PROMPTS.map((prompt, idx) => (
+            {(isProfessionalMode ? PRO_STARTER_PROMPTS : CUSTOMER_STARTER_PROMPTS).map((prompt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSendMessage(prompt)}

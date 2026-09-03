@@ -101,14 +101,14 @@ export const PredictionConsole: React.FC<PredictionConsoleProps> = ({
 
     // 1. Customer Information Validation
     if (!data.age || isNaN(data.age)) {
-      errs.age = 'Driver age is required.';
+      errs.age = 'Please enter your age to continue.';
     } else if (data.age < 16 || data.age > 100) {
       errs.age = 'Driver age must be between 16 and 100 years.';
     }
 
     const maxExperience = Math.max(0, data.age - 16);
     if (data.drivingExperienceYears === undefined || isNaN(data.drivingExperienceYears)) {
-      errs.drivingExperienceYears = 'Driving experience is required.';
+      errs.drivingExperienceYears = 'Please enter your years of driving experience to continue.';
     } else if (data.drivingExperienceYears < 0 || data.drivingExperienceYears > 80) {
       errs.drivingExperienceYears = 'Driving experience must be between 0 and 80 years.';
     } else if (data.drivingExperienceYears > maxExperience) {
@@ -116,40 +116,40 @@ export const PredictionConsole: React.FC<PredictionConsoleProps> = ({
     }
 
     if (!data.creditScore || isNaN(data.creditScore)) {
-      errs.creditScore = 'Credit score is required.';
+      errs.creditScore = 'Please select your credit rating tier to continue.';
     } else if (data.creditScore < 300 || data.creditScore > 850) {
       errs.creditScore = 'Credit score must be between 300 and 850.';
     }
 
     // 2. Policy Information Validation
     if (data.deductible === undefined || isNaN(data.deductible)) {
-      errs.deductible = 'Deductible is required.';
+      errs.deductible = 'Please select your preferred deductible amount to continue.';
     } else if (data.deductible < 0 || data.deductible > 10000) {
       errs.deductible = 'Deductible must be between $0 and $10,000.';
     }
 
     if (!data.annualExposure || isNaN(data.annualExposure)) {
-      errs.annualExposure = 'Annual exposure is required.';
+      errs.annualExposure = 'Please select how long you would like coverage to continue.';
     } else if (data.annualExposure < 0.05 || data.annualExposure > 5.0) {
       errs.annualExposure = 'Annual exposure must be between 0.05 and 5.0 policy-years.';
     }
 
     // 3. Vehicle Information Validation
     if (!data.vehicleValue || isNaN(data.vehicleValue)) {
-      errs.vehicleValue = 'Vehicle value is required.';
+      errs.vehicleValue = 'Please enter a vehicle value to continue.';
     } else if (data.vehicleValue < 500 || data.vehicleValue > 1000000) {
       errs.vehicleValue = 'Vehicle value must be between $500 and $1,000,000.';
     }
 
     if (!data.annualMileage || isNaN(data.annualMileage)) {
-      errs.annualMileage = 'Annual mileage is required.';
+      errs.annualMileage = 'Please enter typical annual mileage to continue.';
     } else if (data.annualMileage < 500 || data.annualMileage > 100000) {
       errs.annualMileage = 'Annual mileage must be between 500 and 100,000 miles.';
     }
 
     // 4. Historical Claim Information Validation
     if (data.priorClaimsLast5Years === undefined || isNaN(data.priorClaimsLast5Years)) {
-      errs.priorClaimsLast5Years = 'Prior claims count is required.';
+      errs.priorClaimsLast5Years = 'Please enter past claims count to continue.';
     } else if (data.priorClaimsLast5Years < 0 || data.priorClaimsLast5Years > 20) {
       errs.priorClaimsLast5Years = 'Prior claims must be between 0 and 20 incidents.';
     }
@@ -227,7 +227,7 @@ export const PredictionConsole: React.FC<PredictionConsoleProps> = ({
         }
       } catch (err: any) {
         console.error('Prediction failed:', err);
-        setApiError(err.message || 'An unexpected error occurred during prediction.');
+        setApiError("Sorry, we couldn't calculate your result right now. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -337,22 +337,22 @@ export const PredictionConsole: React.FC<PredictionConsoleProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Top Error Alert if API error occurred */}
+      {/* Top Error Alert if prediction error occurred */}
       {apiError && (
         <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-xl text-xs text-rose-300 flex items-start justify-between gap-3">
           <div className="flex items-start space-x-2.5">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-bold block text-sm text-rose-200">Prediction API Error</span>
+              <span className="font-bold block text-sm text-rose-200">Unable to Calculate Result</span>
               <p className="mt-0.5">{apiError}</p>
             </div>
           </div>
           <button
             onClick={() => executePrediction(formData, selectedModelVersion)}
-            className="px-3 py-1.5 rounded-lg bg-rose-950 text-rose-200 border border-rose-800 hover:bg-rose-900 flex items-center space-x-1 font-medium transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-rose-950 text-rose-200 border border-rose-800 hover:bg-rose-900 flex items-center space-x-1 font-medium transition-colors cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Retry</span>
+            <span>Try Again</span>
           </button>
         </div>
       )}

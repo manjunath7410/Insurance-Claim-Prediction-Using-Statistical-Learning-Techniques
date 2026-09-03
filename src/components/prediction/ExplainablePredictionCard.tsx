@@ -1,33 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   PredictionResponse,
   SHAPFeatureContribution,
   ModelPrediction,
-  ApiPredictionFactor,
 } from '../../types';
 import {
   ShieldCheck,
   AlertTriangle,
   CheckCircle2,
-  HelpCircle,
-  BarChart3,
-  Scale,
-  TrendingUp,
-  TrendingDown,
   Info,
-  Clock,
-  Cpu,
-  Layers,
-  ListFilter,
-  Check,
-  ChevronRight,
+  ChevronDown,
   BookmarkCheck,
-  Eye,
-  Sliders,
   Sparkles,
-  ArrowRight,
-  ExternalLink,
   GitCompare,
+  SlidersHorizontal,
+  RotateCcw,
 } from 'lucide-react';
 
 export interface ExplainablePredictionCardProps {
@@ -38,9 +25,13 @@ export interface ExplainablePredictionCardProps {
   onLogDecision?: (response: PredictionResponse, notes?: string) => void;
   savedSuccess?: boolean;
   onOpenAICopilot?: (prompt?: string) => void;
+  onExplainMyResult?: (response: PredictionResponse) => void;
+  preferredCurrency?: 'USD' | 'INR';
+  isLoading?: boolean;
+  isProfessionalMode?: boolean;
 }
 
-// Global Feature Importance baseline derived from GBDT/Random Forest training
+// Global Feature Importance baseline derived from training data (preserved for actuarial console)
 export const GLOBAL_FEATURE_IMPORTANCE: Array<{
   feature: string;
   displayName: string;
@@ -91,6 +82,26 @@ export const GLOBAL_FEATURE_IMPORTANCE: Array<{
   },
 ];
 
+interface FriendlyFactor {
+  icon: '🟠' | '🟢';
+  title: string;
+  explanation: string;
+}
+
+export interface CustomerExplanation {
+  title: string;
+  riskMeaning: string;
+  likelihoodMeaning: string;
+  severityMeaning: string;
+  factorsSummary: string;
+  whatToUnderstand: string;
+  reassuranceNotice: string;
+  source: string;
+  isFallback: boolean;
+  disclaimer: string;
+  timestamp: string;
+}
+
 export const ExplainablePredictionCard: React.FC<ExplainablePredictionCardProps> = ({
   predictionResponse,
   policyId,
@@ -99,20 +110,40 @@ export const ExplainablePredictionCard: React.FC<ExplainablePredictionCardProps>
   onLogDecision,
   savedSuccess = false,
   onOpenAICopilot,
+  onExplainMyResult,
+  preferredCurrency = 'INR',
+  isLoading = false,
+  isProfessionalMode = false,
 }) => {
-  // View mode for explanation types
-  const [explanationType, setExplanationType] = useState<
-    'local' | 'positive' | 'negative' | 'global' | 'inputs'
-  >('local');
+  // Currency toggle: Default to INR (₹) or USD ($)
+  const [currency, setCurrency] = useState<'USD' | 'INR'>(preferredCurrency);
 
-  // Currency toggle: Default to INR (₹) as requested in Phase 6 requirements
-  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  // Progressive disclosure for actuaries and technical review (collapsed by default)
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState<boolean>(false);
 
-  // Interactive selected feature modal/inspector
-  const [inspectedFeature, setInspectedFeature] = useState<SHAPFeatureContribution | null>(null);
+  // Customer Explanation state (Phase 6)
+  const [customerExplanation, setCustomerExplanation] = useState<CustomerExplanation | null>(null);
+  const [isExplainingCustomer, setIsExplainingCustomer] = useState<boolean>(false);
+  const [showCustomerExplanation, setShowCustomerExplanation] = useState<boolean>(true);
 
-  // Fallback defaults if predictionResponse is loading
-  const input = predictionResponse?.input;
+  // Explanation status feedback
+  const [explainNotice, setExplainNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (preferredCurrency) {
+      setCurrency(preferredCurrency);
+    }
+  }, [preferredCurrency]);
+
+  // Reset customer explanation when a fresh prediction is calculated
+  useEffect(() => {
+    setCustomerExplanation(null);
+  }, [
+    predictionResponse?.primaryPrediction?.claimProbability,
+    predictionResponse?.primaryPrediction?.expectedSeverityUSD,
+    policyId,
+  ]);
+
   const primaryPred: ModelPrediction = predictionResponse?.primaryPrediction || {
     modelId: 'glm_logistic_gamma',
     modelName: 'Generalized Linear Model (GLM Logistic + Gamma)',
@@ -129,24 +160,25 @@ export const ExplainablePredictionCard: React.FC<ExplainablePredictionCardProps>
     underwritingRecommendation: 'Accept Standard Rate',
   };
 
-  const probPercent = primaryPred.claimProbabilityPercent;
+  // ---------------------------------------------------------------------------
+  // EXISTING RISK CALCULATION & THRESHOLDS (Strictly preserved from statisticalModels.ts)
+  // prob < 0.045: Low Risk
+  // prob < 0.11:  Standard
+  // prob >= 0.11: Elevated / High Risk / Critical Review
+  // ---------------------------------------------------------------------------
   const probVal = primaryPred.claimProbability;
-  const threshold = 0.08; // Calibrated 8.0% underwriting decision threshold
-  const isBelowThreshold = probVal < threshold;
+  const rawTier = (primaryPred.riskTier || '').toLowerCase();
 
-  // Standardize Risk Level to Low / Medium / High
-  const rawTier = (primaryPred.riskTier || 'Standard').toLowerCase();
-  let normalizedRiskLevel: 'Low' | 'Medium' | 'High' = 'Medium';
-  if (rawTier.includes('low')) {
-    normalizedRiskLevel = 'Low';
-  } else if (rawTier.includes('standard') || rawTier.includes('medium') || rawTier.includes('moderate')) {
-    normalizedRiskLevel = probPercent < 8.0 ? 'Low' : 'Medium';
+  let riskCategory: 'lower' | 'moderate' | 'higher' = 'moderate';
+  if (rawTier.includes('low') || probVal < 0.045) {
+    riskCategory = 'lower';
+  } else if (rawTier.includes('standard') || (probVal >= 0.045 && probVal < 0.11)) {
+    riskCategory = 'moderate';
   } else {
-    normalizedRiskLevel = 'High';
+    riskCategory = 'higher';
   }
 
-  // Currency conversion formatting helper
-  // Exchange benchmark: 1 USD = 83 INR
+  // Currency formatting
   const USD_TO_INR_RATE = 83;
   const formatCurrency = (usdAmount: number): string => {
     if (currency === 'INR') {
@@ -156,140 +188,298 @@ export const ExplainablePredictionCard: React.FC<ExplainablePredictionCardProps>
     return `$${Math.round(usdAmount).toLocaleString('en-US')}`;
   };
 
-  // SHAP attributions from response
-  const shapAttributions: SHAPFeatureContribution[] =
-    predictionResponse?.shapAttributions && predictionResponse.shapAttributions.length > 0
-      ? predictionResponse.shapAttributions
-      : [
-          {
-            feature: 'priorClaimsLast5Years',
-            displayName: 'Prior Claims (0 in 5 yrs)',
-            value: '0 claims',
-            impactPercent: -12.4,
-            direction: 'decreases_risk',
-            description: 'Clean claim history provides significant actuarial credit.',
-          },
-          {
-            feature: 'age',
-            displayName: 'Driver Age (35 yrs)',
-            value: '35 yrs',
-            impactPercent: -7.8,
-            direction: 'decreases_risk',
-            description: 'Prime adult age band experiences minimal loss frequency.',
-          },
-          {
-            feature: 'creditScore',
-            displayName: 'Insurance Credit (720 FICO)',
-            value: '720',
-            impactPercent: -8.5,
-            direction: 'decreases_risk',
-            description: 'High financial responsibility actuarial discount.',
-          },
-          {
-            feature: 'annualMileage',
-            displayName: 'Annual Mileage (12,000 mi)',
-            value: '12,000 mi/yr',
-            impactPercent: +4.2,
-            direction: 'increases_risk',
-            description: 'Standard commuter exposure range.',
-          },
-          {
-            feature: 'antiTheftDevice',
-            displayName: 'Anti-Theft Telematics',
-            value: 'Installed',
-            impactPercent: -4.2,
-            direction: 'decreases_risk',
-            description: 'Certified theft deterrent and tracking.',
-          },
-        ];
+  // Formatted Claim Likelihood percentage
+  const displayLikelihood =
+    primaryPred.claimProbabilityPercent % 1 === 0
+      ? `${primaryPred.claimProbabilityPercent.toFixed(0)}%`
+      : `${primaryPred.claimProbabilityPercent.toFixed(1)}%`;
 
-  // Partition into positive (risk increasing) and negative (risk decreasing) contributors
-  const positiveContributors = shapAttributions.filter((s) => s.direction === 'increases_risk');
-  const negativeContributors = shapAttributions.filter((s) => s.direction === 'decreases_risk');
+  // ---------------------------------------------------------------------------
+  // TRANSLATE MODEL EXPLAINABILITY / ATTRIBUTIONS INTO SIMPLE PLAIN ENGLISH
+  // Never show the word SHAP to the normal user.
+  // Translates feature names and effects into friendly descriptions without changing underlying values.
+  // ---------------------------------------------------------------------------
+  const generateFriendlyFactors = (): FriendlyFactor[] => {
+    const attributions: SHAPFeatureContribution[] =
+      predictionResponse?.shapAttributions || [];
+    const factors: FriendlyFactor[] = [];
+    const handledKeys = new Set<string>();
 
-  // Top influential features for "WHY THIS PREDICTION?" (sorted by absolute impact)
-  const sortedByImpact = [...shapAttributions].sort(
-    (a, b) => Math.abs(b.impactPercent) - Math.abs(a.impactPercent)
-  );
-  const topInfluential = sortedByImpact.slice(0, 5);
+    const findAttr = (keyPart: string) =>
+      attributions.find(
+        (a) =>
+          a.feature.toLowerCase().includes(keyPart.toLowerCase()) ||
+          a.displayName.toLowerCase().includes(keyPart.toLowerCase())
+      );
 
-  // Strictly compliant Human-Readable Explanation generator
-  // MANDATE: "Do not claim causality. Use: 'associated with' rather than: 'caused by'"
-  const generateHumanReadableExplanation = (): string => {
-    if (normalizedRiskLevel === 'High') {
-      const drivers = positiveContributors
-        .slice(0, 2)
-        .map((c) => c.displayName.split('(')[0].trim().toLowerCase());
-      const driverPhrase =
-        drivers.length > 0
-          ? drivers.join(' and ')
-          : 'previous claim frequency and elevated exposure';
-      return `The predicted claim risk is elevated mainly associated with ${driverPhrase}.`;
-    } else if (normalizedRiskLevel === 'Medium') {
-      const primaryFactor = sortedByImpact[0]?.displayName.split('(')[0].trim().toLowerCase();
-      return `The predicted claim risk is moderate mainly associated with ${
-        primaryFactor || 'annual commuter mileage exposure and regional territory'
-      }.`;
+    // 1. Previous claims factor
+    const claimsAttr = findAttr('claim');
+    const priorClaimsCount = predictionResponse?.input?.priorClaimsLast5Years ?? 0;
+    if (claimsAttr) {
+      handledKeys.add(claimsAttr.feature);
+      if (claimsAttr.direction === 'increases_risk' || priorClaimsCount > 0) {
+        factors.push({
+          icon: '🟠',
+          title: 'Previous claims',
+          explanation: 'Previous claims increased the estimated risk.',
+        });
+      } else {
+        factors.push({
+          icon: '🟢',
+          title: 'Clean claims history',
+          explanation: 'Having no prior claims helped lower your estimated risk.',
+        });
+      }
     } else {
-      const drivers = negativeContributors
-        .slice(0, 2)
-        .map((c) => c.displayName.split('(')[0].trim().toLowerCase());
-      const driverPhrase =
-        drivers.length > 0
-          ? drivers.join(' and ')
-          : 'clean claim history and prime driver age demographic';
-      return `The predicted claim risk is low mainly associated with ${driverPhrase}.`;
+      if (priorClaimsCount > 0) {
+        factors.push({
+          icon: '🟠',
+          title: 'Previous claims',
+          explanation: 'Previous claims increased the estimated risk.',
+        });
+      } else {
+        factors.push({
+          icon: '🟢',
+          title: 'Clean claims history',
+          explanation: 'Having no prior claims helped lower your estimated risk.',
+        });
+      }
+    }
+
+    // 2. Vehicle value / category factor
+    const vehicleAttr = findAttr('vehicle');
+    if (vehicleAttr) {
+      handledKeys.add(vehicleAttr.feature);
+      if (vehicleAttr.direction === 'increases_risk') {
+        factors.push({
+          icon: '🟠',
+          title: 'Vehicle value',
+          explanation: 'The vehicle value affected the estimated potential claim cost.',
+        });
+      } else {
+        factors.push({
+          icon: '🟢',
+          title: 'Vehicle value',
+          explanation: 'Standard vehicle repair and replacement profile helped keep claim costs moderate.',
+        });
+      }
+    } else {
+      factors.push({
+        icon: '🟠',
+        title: 'Vehicle value',
+        explanation: 'The vehicle value affected the estimated potential claim cost.',
+      });
+    }
+
+    // 3. Other factors from model attributions
+    const remainingAttributions = attributions.filter((a) => !handledKeys.has(a.feature));
+    for (const attr of remainingAttributions) {
+      if (factors.length >= 4) break;
+      const featLower = attr.feature.toLowerCase();
+
+      if (featLower.includes('mileage')) {
+        handledKeys.add(attr.feature);
+        if (attr.direction === 'increases_risk') {
+          factors.push({
+            icon: '🟠',
+            title: 'Annual mileage',
+            explanation: 'Higher annual driving distance increased your road exposure.',
+          });
+        } else {
+          factors.push({
+            icon: '🟢',
+            title: 'Annual mileage',
+            explanation: 'Lower annual driving distance reduced your road exposure.',
+          });
+        }
+      } else if (featLower.includes('credit')) {
+        handledKeys.add(attr.feature);
+        if (attr.direction === 'increases_risk') {
+          factors.push({
+            icon: '🟠',
+            title: 'Credit profile',
+            explanation: 'Credit profile had an upward effect on the statistical risk evaluation.',
+          });
+        } else {
+          factors.push({
+            icon: '🟢',
+            title: 'Credit profile',
+            explanation: 'A strong credit profile reduced the estimated risk.',
+          });
+        }
+      } else if (featLower.includes('theft') || featLower.includes('antitheft')) {
+        handledKeys.add(attr.feature);
+        factors.push({
+          icon: '🟢',
+          title: 'Vehicle security',
+          explanation: 'Installed anti-theft security system reduced the estimated risk.',
+        });
+      } else if (featLower.includes('deductible')) {
+        handledKeys.add(attr.feature);
+        if (attr.direction === 'decreases_risk') {
+          factors.push({
+            icon: '🟢',
+            title: 'Policy deductible',
+            explanation: 'A higher deductible reduced the insurer estimated claim share.',
+          });
+        } else {
+          factors.push({
+            icon: '🟠',
+            title: 'Policy deductible',
+            explanation: 'A lower deductible increased the insurer expected claim payout share.',
+          });
+        }
+      } else if (featLower.includes('zone') || featLower.includes('region')) {
+        handledKeys.add(attr.feature);
+        if (attr.direction === 'increases_risk') {
+          factors.push({
+            icon: '🟠',
+            title: 'Territory location',
+            explanation: 'Operating in a higher-traffic territory increased estimated accident likelihood.',
+          });
+        } else {
+          factors.push({
+            icon: '🟢',
+            title: 'Territory location',
+            explanation: 'Driving in a lower-traffic territory reduced estimated accident likelihood.',
+          });
+        }
+      }
+    }
+
+    // Always ensure a beneficial "Other factors" entry exists as requested
+    const hasGreen = factors.some((f) => f.icon === '🟢');
+    if (!hasGreen || factors.length < 3) {
+      factors.push({
+        icon: '🟢',
+        title: 'Other factors',
+        explanation: 'Some other information reduced or had a smaller effect on the estimated risk.',
+      });
+    }
+
+    return factors;
+  };
+
+  const friendlyFactors = generateFriendlyFactors();
+
+  // Explain My Result action handler (connects to Gemini explanation functionality)
+  const handleExplainClick = async () => {
+    if (!predictionResponse) return;
+
+    // If already generated and currently hidden, simply reveal it
+    if (customerExplanation && !showCustomerExplanation) {
+      setShowCustomerExplanation(true);
+      return;
+    }
+
+    setIsExplainingCustomer(true);
+    setExplainNotice('Asking Gemini to explain your risk result in plain language...');
+
+    try {
+      const payload = {
+        predictionId: policyId || (predictionResponse as any)?.id || 'pred_current',
+        probability: primaryPred.claimProbability,
+        probabilityPercent: `${primaryPred.claimProbabilityPercent.toFixed(1)}%`,
+        riskCategory,
+        expectedSeverityUSD: primaryPred.expectedSeverityUSD,
+        purePremiumUSD: primaryPred.purePremiumUSD,
+        displayLikelihood,
+        displaySeverity: formatCurrency(primaryPred.expectedSeverityUSD),
+        displayRiskCost: formatCurrency(primaryPred.purePremiumUSD),
+        currency,
+        topFactors: friendlyFactors,
+        driverInputs: predictionResponse?.input,
+      };
+
+      const res = await fetch('/api/customer-explain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Server returned ${res.status}`);
+      }
+
+      const data: CustomerExplanation = await res.json();
+      setCustomerExplanation(data);
+      setShowCustomerExplanation(true);
+      setExplainNotice(null);
+
+      if (onExplainMyResult) {
+        onExplainMyResult(predictionResponse);
+      }
+    } catch (err: any) {
+      console.warn('Customer explanation API error, falling back to local deterministic explainer:', err);
+      // High-quality local fallback ensures the user is never blocked or left without an explanation
+      const fallback: CustomerExplanation = {
+        title: 'Help Me Understand',
+        riskMeaning:
+          riskCategory === 'lower'
+            ? 'Your profile is evaluated as Lower Risk. Compared to average drivers on the road, your history and vehicle profile indicate a lower statistical probability of accidents or claims.'
+            : riskCategory === 'moderate'
+            ? 'Your profile is evaluated as Moderate Risk. This is typical for everyday commuters and means your driving profile aligns closely with standard average road exposure.'
+            : 'Your profile is evaluated as Higher Risk. This reflects factors such as recent claim history, higher mileage exposure, or vehicle characteristics that statistically elevate claim propensity.',
+        likelihoodMeaning: `The estimated claim likelihood of ${displayLikelihood} represents the statistical chance that a claim might occur over a typical 12-month driving period. It is a probabilistic estimate derived from historical data of similar drivers, not a certainty.`,
+        severityMeaning: `If an accident or covered loss does occur, the estimated average claim amount is ${formatCurrency(primaryPred.expectedSeverityUSD)}. This figure represents typical repair and replacement costs for vehicles in this class, rather than an out-of-pocket payment you must make.`,
+        factorsSummary:
+          friendlyFactors.length > 0
+            ? `Your result was primarily influenced by key factors including: ${friendlyFactors.map(f => `${f.title} (${f.explanation})`).join('; ')}.`
+            : 'Your result was influenced by your driving record, vehicle characteristics, and annual mileage exposure compared to historical benchmarks.',
+        whatToUnderstand: `The estimated risk cost of ${formatCurrency(primaryPred.purePremiumUSD)} is an actuarial estimate of expected claim costs for this coverage period. It is not necessarily the final insurance premium you would pay, which also accounts for taxes, administrative expenses, and chosen deductible options.`,
+        reassuranceNotice:
+          'This estimate is provided to help you understand your risk factors transparently. It is based on the information provided and historical statistics, and is not a guarantee of future claims or a final insurance quote.',
+        source: 'rule-based-actuarial-engine',
+        isFallback: true,
+        disclaimer:
+          'This is an estimate based on the information provided and historical data. It is not a guarantee of future claims or a final insurance quote.',
+        timestamp: new Date().toISOString(),
+      };
+      setCustomerExplanation(fallback);
+      setShowCustomerExplanation(true);
+      setExplainNotice(null);
+    } finally {
+      setIsExplainingCustomer(false);
     }
   };
 
-  const humanReadableSummary = generateHumanReadableExplanation();
-
-  // Model metadata for Model Transparency
-  const modelUsed = primaryPred.modelName || 'Generalized Linear Model (GLM Logistic + Gamma)';
-  const modelVersion = 'v1.2.0-gbdt-calibrated-platt';
-  const predictionTimestamp = predictionResponse?.timestamp
-    ? new Date(predictionResponse.timestamp).toUTCString()
-    : new Date().toUTCString();
-
   return (
-    <div className="space-y-4">
-      {/* MAIN PREDICTION RESULT CARD */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm">
-        {/* Card Header & Policy Tag */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+    <div className="space-y-4" id="prediction-result-section">
+      {/* MAIN FRIENDLY RESULT CARD CONTAINER */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 shadow-xs space-y-6">
+        
+        {/* Top Bar: Quote ID & Subtle Currency Switch */}
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-              PREDICTION RESULT
+            <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+              Quote #{policyId}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-              {policyId}
-            </span>
-            {/* Currency Switcher */}
-            <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 p-0.5 text-[11px] font-semibold">
+
+          {/* Currency Switcher */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold text-slate-400">Currency:</span>
+            <div className="inline-flex rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 p-0.5 text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setCurrency('INR')}
-                className={`px-2 py-0.5 rounded-md transition-all ${
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   currency === 'INR'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Display amounts in Indian Rupees (INR)"
               >
                 ₹ INR
               </button>
               <button
                 type="button"
                 onClick={() => setCurrency('USD')}
-                className={`px-2 py-0.5 rounded-md transition-all ${
+                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   currency === 'USD'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Display amounts in US Dollars (USD)"
               >
                 $ USD
               </button>
@@ -297,613 +487,465 @@ export const ExplainablePredictionCard: React.FC<ExplainablePredictionCardProps>
           </div>
         </div>
 
-        {/* Hero Section: Claim Probability & Claim Risk */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          {/* Claim Probability Display */}
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                Claim Probability
+        {/* ========================================================================= */}
+        {/* 1. YOUR RISK RESULT: Simple Risk Category (🟢 Lower / 🟠 Moderate / 🔴 Higher) */}
+        {/* ========================================================================= */}
+        <div className="space-y-2.5">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            YOUR RISK RESULT
+          </div>
+
+          <div
+            className={`rounded-2xl p-4 sm:p-5 border transition-all ${
+              riskCategory === 'lower'
+                ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/80 text-emerald-900 dark:text-emerald-100'
+                : riskCategory === 'moderate'
+                ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/80 text-amber-900 dark:text-amber-100'
+                : 'bg-rose-50/80 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/80 text-rose-900 dark:text-rose-100'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl sm:text-3xl leading-none">
+                {riskCategory === 'lower'
+                  ? '🟢'
+                  : riskCategory === 'moderate'
+                  ? '🟠'
+                  : '🔴'}
               </span>
-              <div className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight font-mono">
-                {probPercent.toFixed(1)}%
+              <div>
+                <div className="text-xl sm:text-2xl font-black tracking-tight">
+                  {riskCategory === 'lower'
+                    ? 'Lower Risk'
+                    : riskCategory === 'moderate'
+                    ? 'Moderate Risk'
+                    : 'Higher Risk'}
+                </div>
+                <div className="text-xs sm:text-sm font-medium opacity-90 mt-0.5">
+                  {riskCategory === 'lower'
+                    ? 'Low likelihood of submitting a claim compared to the general population.'
+                    : riskCategory === 'moderate'
+                    ? 'Average claim frequency typical of standard everyday driving.'
+                    : 'Elevated claim risk factors based on the information provided.'}
+                </div>
               </div>
             </div>
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-              <span
-                className={`text-xs font-semibold flex items-center gap-1.5 ${
-                  isBelowThreshold
-                    ? 'text-emerald-700 dark:text-emerald-400'
-                    : 'text-amber-700 dark:text-amber-400'
-                }`}
+          </div>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 2. CLAIM LIKELIHOOD */}
+        {/* ========================================================================= */}
+        <div className="rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/40 space-y-2">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            CLAIM LIKELIHOOD
+          </div>
+          <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+            {displayLikelihood}
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+            This is the model&apos;s estimated likelihood of a claim based on the information you provided.
+          </p>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 3. IF A CLAIM HAPPENS */}
+        {/* ========================================================================= */}
+        <div className="rounded-2xl p-5 border border-slate-200/90 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-850/40 space-y-2">
+          <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            IF A CLAIM HAPPENS
+          </div>
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Estimated claim amount:
+          </div>
+          <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+            {formatCurrency(primaryPred.expectedSeverityUSD)}
+          </div>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+            This is an estimated average claim amount based on the model.
+          </p>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 4. ESTIMATED RISK COST (User-friendly representation of pure premium) */}
+        {/* ========================================================================= */}
+        <div className="rounded-2xl p-5 border border-blue-200/80 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 space-y-2">
+          <div className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+            ESTIMATED RISK COST
+          </div>
+          <div className="text-3xl sm:text-4xl font-black text-blue-700 dark:text-blue-300 font-mono tracking-tight">
+            {formatCurrency(primaryPred.purePremiumUSD)}
+          </div>
+          <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+            This is an estimate of expected claim cost for the selected coverage period. It is not necessarily the final insurance premium you would pay.
+          </p>
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 5. "Why did I get this result?" */}
+        {/* ========================================================================= */}
+        <div className="space-y-3 pt-1">
+          <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+            Why did I get this result?
+          </h3>
+
+          <div className="space-y-2.5">
+            {friendlyFactors.map((factor, idx) => (
+              <div
+                key={idx}
+                className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850/60 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3 transition-colors"
               >
-                {isBelowThreshold ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                    <span>Below 8.0% action threshold</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-600 dark:text-amber-400" />
-                    <span>Exceeds 8.0% action threshold</span>
-                  </>
-                )}
-              </span>
-            </div>
+                <span className="text-lg leading-none shrink-0 mt-0.5">
+                  {factor.icon}
+                </span>
+                <div className="space-y-0.5 min-w-0">
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {factor.title}
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                    &ldquo;{factor.explanation}&rdquo;
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
 
-          {/* Claim Risk Tier Display */}
-          <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-100 dark:border-slate-800 flex flex-col justify-between">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                Claim Risk
-              </span>
-              <div className="flex items-center gap-2 mt-1">
-                <span
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm sm:text-base font-extrabold border ${
-                    normalizedRiskLevel === 'Low'
-                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800'
-                      : normalizedRiskLevel === 'Medium'
-                      ? 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800'
-                      : 'bg-rose-100 text-rose-800 border-rose-300 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800'
-                  }`}
-                >
+        {/* ========================================================================= */}
+        {/* 6. "🤖 Explain My Result" BUTTON & CUSTOMER EXPLANATION SECTION */}
+        {/* ========================================================================= */}
+        <div className="pt-2 space-y-4">
+          <button
+            type="button"
+            id="btn-explain-my-result"
+            onClick={handleExplainClick}
+            disabled={isLoading || isExplainingCustomer}
+            className="w-full py-4 px-6 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white text-sm sm:text-base font-black shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer disabled:opacity-70 min-h-[52px]"
+          >
+            {isExplainingCustomer ? (
+              <>
+                <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span>Explaining Your Result with Gemini...</span>
+              </>
+            ) : customerExplanation ? (
+              <>
+                <RotateCcw className="w-4 h-4" />
+                <span>Re-Explain My Result</span>
+              </>
+            ) : (
+              <>
+                <span className="text-lg">🤖</span>
+                <span>Explain My Result</span>
+              </>
+            )}
+          </button>
+
+          {explainNotice && (
+            <div className="text-center text-xs font-semibold text-blue-600 dark:text-blue-400 animate-fadeIn">
+              {explainNotice}
+            </div>
+          )}
+
+          {/* LOADING STATE FOR CUSTOMER EXPLANATION */}
+          {isExplainingCustomer && (
+            <div className="p-5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 animate-pulse space-y-2.5 text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-2 text-blue-700 dark:text-blue-300 font-bold text-sm">
+                <Sparkles className="w-4 h-4 animate-spin text-blue-600 dark:text-blue-400" />
+                <span>Help Me Understand: Asking Gemini to explain your result...</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Gemini is preparing a clear, reassuring breakdown of what your risk category, estimated likelihood, and repair costs mean in everyday terms without changing your numbers.
+              </p>
+            </div>
+          )}
+
+          {/* HELP ME UNDERSTAND - CUSTOMER EXPLANATION CARD (PHASE 6) */}
+          {customerExplanation && showCustomerExplanation && !isExplainingCustomer && (
+            <div
+              id="customer-explanation-section"
+              className="rounded-2xl p-5 sm:p-6 bg-gradient-to-b from-blue-50/70 via-white to-slate-50 dark:from-slate-850 dark:via-slate-900 dark:to-slate-900 border-2 border-blue-200 dark:border-blue-800/80 shadow-sm space-y-5 transition-all"
+            >
+              {/* Header: Title & AI Provenance Badge */}
+              <div className="flex items-start justify-between gap-3 border-b border-blue-100 dark:border-slate-800 pb-3.5">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🤖</span>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                      {customerExplanation.title || 'Help Me Understand'}
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    A simple, plain-language explanation of your risk evaluation.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      normalizedRiskLevel === 'Low'
-                        ? 'bg-emerald-500'
-                        : normalizedRiskLevel === 'Medium'
-                        ? 'bg-amber-500'
-                        : 'bg-rose-500'
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold ${
+                      !customerExplanation.isFallback
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 border border-blue-200 dark:border-blue-800'
+                        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
-                  />
-                  <span>{normalizedRiskLevel} Risk</span>
-                </span>
+                  >
+                    {!customerExplanation.isFallback ? (
+                      <>
+                        <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                        <span>Gemini Assistant</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                        <span>Actuarial Explainer</span>
+                      </>
+                    )}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomerExplanation(false)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Collapse explanation"
+                    aria-label="Collapse explanation"
+                  >
+                    <ChevronDown className="w-4 h-4 rotate-180" />
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                {normalizedRiskLevel === 'Low'
-                  ? 'Favorable actuarial loss expectancy'
-                  : normalizedRiskLevel === 'Medium'
-                  ? 'Standard market underwriting tier'
-                  : 'Requires rate surcharge or inspection'}
-              </p>
-            </div>
-          </div>
-        </div>
+              {/* 1. What the Risk Result Means */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>{riskCategory === 'lower' ? '🟢' : riskCategory === 'moderate' ? '🟠' : '🔴'}</span>
+                  <span>1. What Your Risk Result Means</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  {customerExplanation.riskMeaning}
+                </p>
+              </div>
 
-        {/* Financial Metrics: Predicted Claim Amount & Expected Loss / Pure Premium */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
-          {/* Predicted Claim Amount */}
-          <div className="p-3.5 rounded-xl border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-950/30">
-            <div className="flex items-center justify-between text-xs text-indigo-900 dark:text-indigo-300 font-semibold mb-1">
-              <span>Predicted Claim Amount</span>
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-mono">
-                E[Loss | Claim]
-              </span>
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-indigo-950 dark:text-indigo-200 font-mono">
-              {formatCurrency(primaryPred.expectedSeverityUSD)}
-            </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
-              Conditional severity mean
-            </span>
-          </div>
+              {/* 2. What the Estimated Claim Likelihood Means */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>📊</span>
+                  <span>2. What Claim Likelihood Means ({displayLikelihood})</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  {customerExplanation.likelihoodMeaning}
+                </p>
+              </div>
 
-          {/* Expected Loss / Pure Premium */}
-          <div className="p-3.5 rounded-xl border border-emerald-100 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/30">
-            <div className="flex items-center justify-between text-xs text-emerald-900 dark:text-emerald-300 font-semibold mb-1">
-              <span>Expected Loss / Pure Premium</span>
-              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono">
-                P(Claim) × Severity
-              </span>
-            </div>
-            <div className="text-xl sm:text-2xl font-black text-emerald-950 dark:text-emerald-200 font-mono">
-              {formatCurrency(primaryPred.purePremiumUSD)}
-            </div>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 block">
-              Pure risk cost per annual exposure
-            </span>
-          </div>
-        </div>
+              {/* 3. What the Estimated Claim Amount Means */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>🔧</span>
+                  <span>3. What Estimated Claim Amount Means ({formatCurrency(primaryPred.expectedSeverityUSD)})</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  {customerExplanation.severityMeaning}
+                </p>
+              </div>
 
-        {/* HUMAN-READABLE EXPLANATION (Strict Non-Causal Phrasing) */}
-        <div className="mb-5 p-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/70 dark:bg-blue-950/40">
-          <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-            <span className="text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-300">
-              Underwriting Explanation
-            </span>
-          </div>
-          <p className="text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 leading-relaxed">
-            &ldquo;{humanReadableSummary}&rdquo;
-          </p>
-          <div className="mt-2 pt-2 border-t border-blue-200/60 dark:border-blue-900/40 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-            <span>
-              <strong className="font-semibold text-slate-700 dark:text-slate-300">Actuarial Guardrail:</strong>{' '}
-              Expressed as statistical correlation (&ldquo;associated with&rdquo;), not direct causation.
-            </span>
-          </div>
-        </div>
+              {/* 4. Which Factors Influenced the Result */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>🔍</span>
+                  <span>4. Factors Influencing Your Result</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  {customerExplanation.factorsSummary}
+                </p>
+              </div>
 
-        {/* "WHY THIS PREDICTION?" SECTION */}
-        <div className="mb-5 border-t border-slate-100 dark:border-slate-800 pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                WHY THIS PREDICTION?
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                Most influential rating features based on model SHAP attributions
-              </p>
-            </div>
-            <span className="text-[11px] font-mono text-slate-400">Impact on P(Claim)</span>
-          </div>
+              {/* 5. What the User Should Understand About the Estimate */}
+              <div className="space-y-1.5">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <span>💡</span>
+                  <span>5. Understanding Your Estimated Risk Cost ({formatCurrency(primaryPred.purePremiumUSD)})</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed bg-white/80 dark:bg-slate-800/60 p-3.5 rounded-xl border border-slate-200/70 dark:border-slate-800">
+                  {customerExplanation.whatToUnderstand}
+                </p>
+              </div>
 
-          <div className="space-y-2">
-            {topInfluential.map((factor, idx) => {
-              const isIncrease = factor.direction === 'increases_risk';
-              const sign = isIncrease ? '+' : '';
-              const impactFormatted = `${sign}${factor.impactPercent.toFixed(1)}%`;
-              return (
-                <div
-                  key={idx}
-                  onClick={() => setInspectedFeature(factor)}
-                  className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/40 hover:border-blue-300 dark:hover:border-blue-700 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
+              {/* 6. Clarification & Reassurance Notice */}
+              <div className="p-3.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 leading-relaxed">
+                <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <div className="font-bold">6. Informational Disclaimer</div>
+                  <p>{customerExplanation.reassuranceNotice}</p>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-blue-100 dark:border-slate-800 text-xs">
+                <button
+                  type="button"
+                  onClick={handleExplainClick}
+                  disabled={isExplainingCustomer}
+                  className="text-blue-600 dark:text-blue-400 hover:underline font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                    <span
-                      className={`w-2 h-2 rounded-full shrink-0 ${
-                        isIncrease ? 'bg-rose-500' : 'bg-emerald-500'
-                      }`}
-                    />
-                    <div className="min-w-0">
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        {factor.displayName}
-                      </span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate block">
-                        Input Value: <strong className="font-mono">{factor.value}</strong>
-                      </span>
-                    </div>
-                  </div>
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Re-run Explanation</span>
+                </button>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md ${
-                        isIncrease
-                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 border border-rose-200 dark:border-rose-900'
-                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900'
-                      }`}
-                    >
-                      {impactFormatted}
-                    </span>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-500 transition-colors" />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p className="text-[10px] text-slate-400 mt-2 text-right">
-            Click any factor to inspect its actuarial mechanism
-          </p>
-        </div>
-
-        {/* EXPLANATION TYPES SECTION (Tabs: Local, Positive, Negative, Global, Raw Inputs) */}
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mb-5">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-blue-500" />
-              EXPLANATION TYPES
-            </span>
-          </div>
-
-          {/* Explanation Navigation Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-3 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setExplanationType('local')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-                explanationType === 'local'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Local Prediction
-            </button>
-            <button
-              type="button"
-              onClick={() => setExplanationType('positive')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-                explanationType === 'positive'
-                  ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-rose-500'
-              }`}
-            >
-              Positive (+Risk)
-            </button>
-            <button
-              type="button"
-              onClick={() => setExplanationType('negative')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-                explanationType === 'negative'
-                  ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-emerald-500'
-              }`}
-            >
-              Negative (-Risk)
-            </button>
-            <button
-              type="button"
-              onClick={() => setExplanationType('global')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-                explanationType === 'global'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Global Importance
-            </button>
-            <button
-              type="button"
-              onClick={() => setExplanationType('inputs')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors whitespace-nowrap ${
-                explanationType === 'inputs'
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              Feature Values Used
-            </button>
-          </div>
-
-          {/* TAB CONTENT: Local Prediction Waterfall */}
-          {explanationType === 'local' && (
-            <div className="space-y-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-200/60 dark:border-slate-700/60 font-semibold text-slate-500 dark:text-slate-400">
-                <span>Population Base Claim Frequency:</span>
-                <span className="font-mono text-slate-700 dark:text-slate-300">5.0%</span>
-              </div>
-              <div className="space-y-1.5 pt-1">
-                {shapAttributions.map((s, idx) => {
-                  const isPos = s.direction === 'increases_risk';
-                  return (
-                    <div key={idx} className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-600 dark:text-slate-300 truncate mr-2">
-                        {s.displayName}
-                      </span>
-                      <span
-                        className={`font-mono font-bold shrink-0 ${
-                          isPos ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
-                        }`}
-                      >
-                        {isPos ? '+' : ''}
-                        {s.impactPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-slate-700/60 font-bold text-slate-900 dark:text-white">
-                <span>Final Calibrated Probability:</span>
-                <span className="font-mono text-blue-600 dark:text-blue-400">
-                  {probPercent.toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* TAB CONTENT: Positive Contributors */}
-          {explanationType === 'positive' && (
-            <div className="space-y-2">
-              {positiveContributors.length === 0 ? (
-                <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-xl">
-                  No risk-increasing factors identified. Policyholder benefits from standard or preferred rates.
-                </div>
-              ) : (
-                positiveContributors.map((c, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl border border-rose-100 dark:border-rose-900/60 bg-rose-50/50 dark:bg-rose-950/30 text-xs flex justify-between items-center"
+                {onOpenAICopilot && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onOpenAICopilot(
+                        `I have a question about my auto insurance risk evaluation:\n` +
+                          `• Risk Category: ${riskCategory === 'lower' ? 'Lower Risk' : riskCategory === 'moderate' ? 'Moderate Risk' : 'Higher Risk'}\n` +
+                          `• Claim Likelihood: ${displayLikelihood}\n` +
+                          `• Estimated Risk Cost: ${formatCurrency(primaryPred.purePremiumUSD)}\n\n` +
+                          `What are simple, everyday things I can do to keep my road risk low?`
+                      )
+                    }
+                    className="text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-medium flex items-center gap-1 cursor-pointer"
                   >
-                    <div>
-                      <span className="font-bold text-rose-900 dark:text-rose-300 block">
-                        {c.displayName}
-                      </span>
-                      <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                        {c.description}
-                      </span>
-                    </div>
-                    <span className="font-mono font-bold text-rose-700 dark:text-rose-400 shrink-0 ml-2">
-                      +{c.impactPercent.toFixed(1)}%
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* TAB CONTENT: Negative Contributors */}
-          {explanationType === 'negative' && (
-            <div className="space-y-2">
-              {negativeContributors.length === 0 ? (
-                <div className="p-3 text-center text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/40 rounded-xl">
-                  No discount factors applied. Standard rates apply.
-                </div>
-              ) : (
-                negativeContributors.map((c, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl border border-emerald-100 dark:border-emerald-900/60 bg-emerald-50/50 dark:bg-emerald-950/30 text-xs flex justify-between items-center"
-                  >
-                    <div>
-                      <span className="font-bold text-emerald-900 dark:text-emerald-300 block">
-                        {c.displayName}
-                      </span>
-                      <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                        {c.description}
-                      </span>
-                    </div>
-                    <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400 shrink-0 ml-2">
-                      {c.impactPercent.toFixed(1)}%
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* TAB CONTENT: Global Feature Importance */}
-          {explanationType === 'global' && (
-            <div className="space-y-2.5 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-1">
-                Overall relative predictive power across the validated model benchmark:
-              </span>
-              {GLOBAL_FEATURE_IMPORTANCE.map((g, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {g.displayName}
-                    </span>
-                    <span className="font-mono font-bold text-blue-600 dark:text-blue-400 text-[11px]">
-                      {g.importancePercent}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                    <div
-                      className="bg-blue-600 dark:bg-blue-500 h-full rounded-full"
-                      style={{ width: `${(g.importancePercent / 30) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* TAB CONTENT: Feature Values Used for Prediction */}
-          {explanationType === 'inputs' && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 block mb-2 font-medium">
-                Exact rating vector evaluated for this policy:
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Driver Age:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {input?.age ?? 35} yrs
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Experience:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {input?.drivingExperienceYears ?? 15} yrs
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Prior Claims (5y):</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {input?.priorClaimsLast5Years ?? 0}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Annual Mileage:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {(input?.annualMileage ?? 12000).toLocaleString()} mi
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Credit Score:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {input?.creditScore ?? 720} FICO
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Vehicle Category:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
-                    {input?.vehicleCategory ?? 'Compact SUV'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Territory Zone:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[120px]">
-                    {input?.regionalZone ?? 'Zone B'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200/50 dark:border-slate-700/50">
-                  <span className="text-slate-500 dark:text-slate-400">Anti-Theft Device:</span>
-                  <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">
-                    {input?.antiTheftDevice ? 'Installed' : 'None'}
-                  </span>
-                </div>
+                    <span>Have more questions? Ask in AI Copilot →</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
+
+          {/* COLLAPSED EXPAND BUTTON (If user hid the explanation) */}
+          {customerExplanation && !showCustomerExplanation && (
+            <button
+              type="button"
+              onClick={() => setShowCustomerExplanation(true)}
+              className="w-full py-2.5 px-4 rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 text-xs font-bold hover:bg-blue-100/50 dark:hover:bg-blue-900/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>Show Saved Explanation (Help Me Understand)</span>
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
-        {/* MODEL TRANSPARENCY SECTION */}
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Cpu className="w-3.5 h-3.5 text-slate-500" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              MODEL TRANSPARENCY
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800 text-[11px]">
-            <div>
-              <span className="text-slate-500 dark:text-slate-400 block font-medium">Model used:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate" title={modelUsed}>
-                {modelUsed}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500 dark:text-slate-400 block font-medium">Model version:</span>
-              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400 block truncate">
-                {modelVersion}
-              </span>
-            </div>
-            <div>
-              <span className="text-slate-500 dark:text-slate-400 block font-medium">Prediction timestamp:</span>
-              <span className="font-mono text-slate-700 dark:text-slate-300 block truncate" title={predictionTimestamp}>
-                {predictionTimestamp}
-              </span>
-            </div>
-          </div>
+        {/* ========================================================================= */}
+        {/* 7. CLEAR DISCLAIMER */}
+        {/* ========================================================================= */}
+        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-850/80 border border-slate-200/80 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
+          <span>
+            This is an estimate based on the information provided and historical data. It is not a guarantee of future claims or a final insurance quote.
+          </span>
         </div>
 
-        {/* ACTIONS FOOTER */}
-        <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-          {onNavigateToScenario && (
+        {/* ========================================================================= */}
+        {/* SECONDARY ACTIONS: Save Quote & What-If Changes */}
+        {/* ========================================================================= */}
+        <div className="pt-1 flex flex-col sm:flex-row items-center gap-2.5 border-t border-slate-100 dark:border-slate-800">
+          {onLogDecision && (
+            <button
+              type="button"
+              id="btn-log-underwriting-decision"
+              onClick={() => predictionResponse && onLogDecision(predictionResponse)}
+              className="w-full sm:flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
+            >
+              <BookmarkCheck className="w-4 h-4 text-blue-600" />
+              <span>{savedSuccess ? 'Quote Saved!' : 'Save Quote'}</span>
+            </button>
+          )}
+
+          {isProfessionalMode && onNavigateToScenario && (
             <button
               type="button"
               id="btn-run-scenario-analysis"
               onClick={() => predictionResponse && onNavigateToScenario(predictionResponse)}
-              className="w-full py-2.5 px-4 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/70 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
+              className="w-full sm:flex-1 py-3 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[44px]"
             >
-              <GitCompare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-              <span>Analyze in Risk Scenario Analysis →</span>
+              <GitCompare className="w-4 h-4 text-indigo-500" />
+              <span>Test What-If Changes</span>
             </button>
           )}
+        </div>
 
-          {onOpenAICopilot && (
+        {/* ========================================================================= */}
+        {/* PROGRESSIVE DISCLOSURE ACCORDION: Specialist / Actuarial Details (Professional Mode Only) */}
+        {/* ========================================================================= */}
+        {isProfessionalMode && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
-              id="btn-ask-ai-copilot-explain"
-              onClick={() =>
-                onOpenAICopilot(
-                  `Explain why this policy has a claim probability of ${primaryPred.claimProbabilityPercent.toFixed(1)}% and pure premium of $${primaryPred.purePremiumUSD.toLocaleString()}, and suggest actions to lower risk.`
-                )
-              }
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer min-h-[42px]"
+              onClick={() => setShowTechnicalDetails((prev) => !prev)}
+              className="w-full py-2 px-3 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-850/60 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer"
             >
-              <Sparkles className="w-4 h-4 animate-pulse" />
-              <span>Ask AI Copilot to Explain Risk Factors</span>
+              <div className="flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+                <span>Actuarial Details &amp; Model Diagnostics (For Specialists)</span>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  showTechnicalDetails ? 'rotate-180 text-blue-600' : ''
+                }`}
+              />
             </button>
-          )}
 
-          <div className="flex flex-col sm:flex-row items-center gap-2">
-            {onNavigateToInsights && (
-              <button
-                type="button"
-                id="btn-view-detailed-insights"
-                onClick={() => predictionResponse && onNavigateToInsights(predictionResponse)}
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
-              >
-                <span>View detailed explanation</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
-
-            {onLogDecision && (
-              <button
-                type="button"
-                id="btn-log-underwriting-decision"
-                onClick={() => predictionResponse && onLogDecision(predictionResponse)}
-                className="w-full sm:w-1/2 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer min-h-[42px]"
-              >
-                <BookmarkCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>{savedSuccess ? 'Decision Logged!' : 'Log Decision'}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* FEATURE INSPECTION MODAL / POPUP */}
-      {inspectedFeature && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
-                <Info className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Feature Inspection
-                </h4>
-              </div>
-              <button
-                type="button"
-                onClick={() => setInspectedFeature(null)}
-                className="text-xs px-2 py-1 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <span className="text-slate-500 dark:text-slate-400 block font-medium">Rating Feature:</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">
-                  {inspectedFeature.displayName}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 block font-medium">Applicant Value:</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-white text-sm">
-                    {inspectedFeature.value}
-                  </span>
+            {showTechnicalDetails && (
+              <div className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 space-y-3 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      Claim Probability
+                    </span>
+                    <span className="text-sm font-black font-mono text-slate-900 dark:text-white">
+                      {primaryPred.claimProbabilityPercent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      Expected Severity
+                    </span>
+                    <span className="text-sm font-black font-mono text-slate-900 dark:text-white">
+                      {formatCurrency(primaryPred.expectedSeverityUSD)}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 col-span-2 sm:col-span-1">
+                    <span className="text-slate-400 block text-[10px] uppercase font-bold">
+                      Pure Premium E[L]
+                    </span>
+                    <span className="text-sm font-black font-mono text-slate-900 dark:text-white">
+                      {formatCurrency(primaryPred.purePremiumUSD)}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-slate-500 dark:text-slate-400 block font-medium">Marginal Impact:</span>
-                  <span
-                    className={`font-mono font-bold text-sm ${
-                      inspectedFeature.direction === 'increases_risk'
-                        ? 'text-rose-600 dark:text-rose-400'
-                        : 'text-emerald-600 dark:text-emerald-400'
-                    }`}
+
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px] space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Underlying Model:</span>
+                    <span className="font-medium text-slate-700 dark:text-slate-300">
+                      {primaryPred.modelName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Deviance Score:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">
+                      {primaryPred.devianceScore}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Inference Latency:</span>
+                    <span className="font-mono text-slate-700 dark:text-slate-300">
+                      {primaryPred.inferenceTimeMs}ms
+                    </span>
+                  </div>
+                </div>
+
+                {onNavigateToInsights && (
+                  <button
+                    type="button"
+                    onClick={() => predictionResponse && onNavigateToInsights(predictionResponse)}
+                    className="w-full py-2 px-3 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
                   >
-                    {inspectedFeature.direction === 'increases_risk' ? '+' : ''}
-                    {inspectedFeature.impactPercent.toFixed(1)}%
-                  </span>
-                </div>
+                    Open Actuarial Insights Suite →
+                  </button>
+                )}
               </div>
-
-              <div>
-                <span className="text-slate-500 dark:text-slate-400 block font-medium mb-1">
-                  Actuarial Explanation:
-                </span>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
-                  {inspectedFeature.description}
-                </p>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 text-[11px] text-blue-900 dark:text-blue-300">
-                <strong>Non-Causal Notice:</strong> This feature impact represents empirical risk association across the portfolio, complying with state rating regulations.
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setInspectedFeature(null)}
-              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors"
-            >
-              Done
-            </button>
+            )}
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 };
+

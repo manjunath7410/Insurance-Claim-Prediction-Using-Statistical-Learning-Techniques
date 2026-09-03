@@ -884,7 +884,7 @@ export const PredictionForm: React.FC<PredictionFormProps> = ({
           {isLoading ? (
             <>
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Running Actuarial Inference...</span>
+              <span>Analyzing your information...</span>
             </>
           ) : (
             <>

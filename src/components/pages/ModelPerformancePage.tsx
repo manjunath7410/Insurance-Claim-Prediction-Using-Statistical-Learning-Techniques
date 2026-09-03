@@ -59,20 +59,32 @@ import {
 interface ModelPerformancePageProps {
   selectedModel?: ModelType;
   onSelectModel?: (model: ModelType) => void;
+  initialTab?: 'comparison' | 'validation' | 'regression' | 'selection' | 'curves' | 'reproducibility';
+  initialCurveTab?: 'roc' | 'lorenz' | 'calibration';
 }
 
 export const ModelPerformancePage: React.FC<ModelPerformancePageProps> = ({
   selectedModel = 'gradient_boosting_tweedie',
   onSelectModel,
+  initialTab = 'comparison',
+  initialCurveTab = 'roc',
 }) => {
   const [activeTab, setActiveTab] = useState<
     'comparison' | 'validation' | 'regression' | 'selection' | 'curves' | 'reproducibility'
-  >('comparison');
+  >(initialTab);
   const [metricFilter, setMetricFilter] = useState<'all' | 'classification' | 'regression' | 'insurance'>('all');
-  const [activeCurveTab, setActiveCurveTab] = useState<'roc' | 'lorenz' | 'calibration'>('roc');
+  const [activeCurveTab, setActiveCurveTab] = useState<'roc' | 'lorenz' | 'calibration'>(initialCurveTab);
   const [selectedConfusionModelId, setSelectedConfusionModelId] = useState<ModelType>('gradient_boosting_tweedie');
   const [registryModels, setRegistryModels] = useState<RegistryModelRecord[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialCurveTab) setActiveCurveTab(initialCurveTab);
+  }, [initialCurveTab]);
 
   // Fetch validation suite data
   const report: StatisticalValidationReport = getStatisticalValidationReport();

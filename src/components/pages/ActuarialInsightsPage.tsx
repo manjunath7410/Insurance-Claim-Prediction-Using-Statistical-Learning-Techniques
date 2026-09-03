@@ -146,7 +146,15 @@ export const ActuarialInsightsPage: React.FC<ActuarialInsightsPageProps> = ({
 
       if (res.ok) {
         const data = await res.json();
-        setDossierText(data.dossier || data.analysis || 'Dossier generated successfully.');
+        let formatted = '';
+        if (typeof data.dossier === 'string') {
+          formatted = data.dossier;
+        } else if (data.summary || data.actuarialAssessment) {
+          formatted = `EXECUTIVE SUMMARY\n-----------------\n${data.summary || ''}\n\nACTUARIAL RISK ASSESSMENT\n-------------------------\n${data.actuarialAssessment || ''}\n\nTOP RISK DRIVERS\n----------------\n${Array.isArray(data.topRiskDrivers) ? data.topRiskDrivers.join('\n') : ''}\n\nPRICING & UNDERWRITING RECOMMENDATION\n------------------------------------\n${data.pricingRecommendation || ''}\n\nREGULATORY FAIRNESS & COMPLIANCE\n--------------------------------\n${data.regulatoryFairnessNote || ''}`;
+        } else {
+          formatted = data.analysis || (typeof data === 'string' ? data : JSON.stringify(data, null, 2));
+        }
+        setDossierText(formatted || 'Underwriting defense dossier compiled successfully.');
         setActiveTab('dossier');
       } else {
         setDossierText('Underwriting dossier compiled from deterministic actuarial rules.');

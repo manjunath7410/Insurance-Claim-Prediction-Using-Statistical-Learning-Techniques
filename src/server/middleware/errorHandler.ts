@@ -16,9 +16,14 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
 
   // 1. Validation Error Handling
   if (err instanceof ValidationError || err?.name === 'ValidationError') {
+    const primaryError = err.fieldErrors?.[0]?.message || err.message;
+    const friendlyMsg = primaryError && primaryError.includes('Driver age')
+      ? 'Please enter your age to continue.'
+      : primaryError || 'Please check your entered details to continue.';
+
     return res.status(err.statusCode || 422).json({
       error: 'ValidationError',
-      message: err.message,
+      message: friendlyMsg,
       fieldErrors: err.fieldErrors || [],
       correlationId,
       timestamp: new Date().toISOString(),
@@ -29,7 +34,7 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   if (err?.type === 'entity.parse.failed' || (err instanceof SyntaxError && 'body' in err)) {
     return res.status(400).json({
       error: 'MalformedJson',
-      message: 'The request body could not be parsed as valid JSON.',
+      message: "We couldn't process the submitted information. Please check your inputs and try again.",
       correlationId,
       timestamp: new Date().toISOString(),
     });
@@ -39,17 +44,17 @@ export function errorHandler(err: any, req: Request, res: Response, next: NextFu
   if (err?.message && err.message.includes('not found in registry')) {
     return res.status(404).json({
       error: 'ModelNotFound',
-      message: err.message,
+      message: "Sorry, we couldn't calculate your result right now. Please try again.",
       correlationId,
       timestamp: new Date().toISOString(),
     });
   }
 
-  // 4. General / Internal Errors - Never expose internal stack traces or secrets
+  // 4. General / Internal Errors - Never expose internal stack traces or raw technical errors
   const statusCode = typeof err?.statusCode === 'number' ? err.statusCode : 500;
   const safeMessage = statusCode >= 500
-    ? 'An internal processing error occurred while evaluating the actuarial model.'
-    : err?.message || 'Request processing failed.';
+    ? "Sorry, we couldn't calculate your result right now. Please try again."
+    : err?.message || "Sorry, we couldn't calculate your result right now. Please try again.";
 
   res.status(statusCode).json({
     error: err?.name || 'InternalServerError',

@@ -1,5 +1,12 @@
 import { Router, Request, Response } from 'express';
-import { ExplainabilityService, PROMPT_VERSION_EXPLAIN, PROMPT_VERSION_REPORT, PredictionExplanationInput } from '../services/explainabilityService';
+import {
+  ExplainabilityService,
+  PROMPT_VERSION_EXPLAIN,
+  PROMPT_VERSION_REPORT,
+  PROMPT_VERSION_CUSTOMER_EXPLAIN,
+  PredictionExplanationInput,
+  CustomerExplanationInput,
+} from '../services/explainabilityService';
 import { optionalAuthenticate } from '../middleware/authMiddleware';
 import { explainabilityRateLimiter } from '../middleware/rateLimiter';
 import { logger } from '../logger';
@@ -16,7 +23,7 @@ explainabilityRouter.get('/health', (req: Request, res: Response) => {
   const isApiKeyConfigured = Boolean(config.geminiApiKey || process.env.GEMINI_API_KEY);
   res.json({
     status: 'healthy',
-    explanatoryAiModel: 'gemini-3.7-flash',
+    explanatoryAiModel: 'gemini-3.8-flash',
     apiKeyConfigured: isApiKeyConfigured,
     fallbackEngine: 'Deterministic Actuarial Rule Kernel',
     promptVersions: {
@@ -164,5 +171,49 @@ explainabilityRouter.post('/report', optionalAuthenticate, async (req: Request, 
       message: 'Failed to generate underwriting dossier report.',
       details: error?.message,
     });
+  }
+});
+
+/**
+ * 5. Generate Simple Customer-Friendly Explanation (POST /api/explainability/customer-explain & POST /api/customer-explain)
+ * 
+ * Strict Invariants:
+ * - Gemini does NOT calculate or modify quantitative prediction.
+ * - Single source of truth is existing ML engine.
+ * - Simple language suitable for non-technical customer.
+ * - Always falls back to deterministic explanation if Gemini is offline.
+ */
+explainabilityRouter.post('/customer-explain', optionalAuthenticate, async (req: Request, res: Response) => {
+  try {
+    const body = req.body || {};
+    const input: CustomerExplanationInput = {
+      predictionId: body.predictionId,
+      probability: typeof body.probability === 'number' ? body.probability : (body.claimProbability ?? 0.05),
+      probabilityPercent: body.probabilityPercent || `${((body.probability ?? 0.05) * 100).toFixed(1)}%`,
+      riskCategory: body.riskCategory || 'moderate',
+      expectedSeverityUSD: body.expectedSeverityUSD ?? 3850,
+      purePremiumUSD: body.purePremiumUSD ?? Math.round((body.probability ?? 0.05) * 3850),
+      displayLikelihood: body.displayLikelihood || `${((body.probability ?? 0.05) * 100).toFixed(1)}%`,
+      displaySeverity: body.displaySeverity || '$3,850',
+      displayRiskCost: body.displayRiskCost || '$193',
+      currency: body.currency || 'INR',
+      topFactors: Array.isArray(body.topFactors) ? body.topFactors : [],
+      driverInputs: body.driverInputs || body.input || {},
+    };
+
+    const userContext = {
+      userId: req.user?.id,
+      userEmail: req.user?.email,
+      userRole: req.user?.role,
+      ip: req.ip,
+    };
+
+    const explanationResult = await ExplainabilityService.generateCustomerExplanation(input, userContext);
+    res.status(200).json(explanationResult);
+  } catch (error: any) {
+    logger.error('Failed to generate customer explanation:', { error: error?.message });
+    // Guarantee that customer always receives a friendly explanation even if unexpected error happens
+    const fallback = ExplainabilityService.generateDeterministicCustomerExplanation(req.body || {});
+    res.status(200).json(fallback);
   }
 });

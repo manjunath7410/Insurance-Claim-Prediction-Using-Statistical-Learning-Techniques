@@ -82,7 +82,7 @@ export class AuditService {
     limit?: number;
     offset?: number;
   }): AuditLogEntity[] {
-    const res = db.listAuditLogs(filters || {});
+    const res = db.listAuditLogs({ limit: 10000, ...(filters || {}) });
     return res.logs;
   }
 
