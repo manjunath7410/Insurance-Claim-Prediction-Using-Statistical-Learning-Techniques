@@ -8,7 +8,9 @@ import { PredictionHistoryPage } from './components/pages/PredictionHistoryPage'
 import { ActuarialInsightsPage } from './components/pages/ActuarialInsightsPage';
 import { SettingsPage } from './components/pages/SettingsPage';
 import { DatasetUploadPage } from './components/pages/DatasetUploadPage';
-import { ModelType, PredictionResponse } from './types';
+import { ScenarioAnalysisPage } from './components/pages/ScenarioAnalysisPage';
+import { DataDriftPage } from './components/pages/DataDriftPage';
+import { ModelType, PredictionResponse, PolicyholderInput } from './types';
 
 // Modals
 const UnderwritingReportModal = lazy(() =>
@@ -36,6 +38,7 @@ function TabLoadingFallback() {
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('prediction');
   const [activePrediction, setActivePrediction] = useState<PredictionResponse | null>(null);
+  const [scenarioBaseline, setScenarioBaseline] = useState<PolicyholderInput | null>(null);
   const [decisionThreshold, setDecisionThreshold] = useState<number>(8.0);
 
   // Theme Management
@@ -119,11 +122,35 @@ export default function App() {
               setActivePrediction(resp);
               setActiveTab('actuarial');
             }}
+            onNavigateToScenario={(resp) => {
+              setActivePrediction(resp);
+              setScenarioBaseline(resp.input);
+              setActiveTab('scenario');
+            }}
             onLogDecision={handleLogDecision}
           />
         )}
 
-        {activeTab === 'dataset' && <DatasetUploadPage />}
+        {activeTab === 'scenario' && (
+          <ScenarioAnalysisPage
+            initialBaseline={scenarioBaseline || activePrediction?.input || null}
+            onNavigateToPrediction={() => setActiveTab('prediction')}
+          />
+        )}
+
+        {activeTab === 'dataset' && (
+          <DatasetUploadPage
+            onNavigateToAnalytics={() => setActiveTab('analytics')}
+            onNavigateToDrift={() => setActiveTab('drift')}
+          />
+        )}
+
+        {activeTab === 'drift' && (
+          <DataDriftPage
+            onNavigateToDatasetUpload={() => setActiveTab('dataset')}
+            onNavigateToModels={() => setActiveTab('models')}
+          />
+        )}
 
         {activeTab === 'analytics' && <PortfolioAnalyticsPage />}
 

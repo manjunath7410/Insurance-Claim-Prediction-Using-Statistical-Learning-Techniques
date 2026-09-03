@@ -8,6 +8,7 @@ import {
 } from '../types';
 import {
   PRESET_PROFILES,
+  runStatisticalLearningInference,
 } from '../services/statisticalModels';
 import { PredictionForm, FormValidationErrors } from './prediction/PredictionForm';
 import { PredictionResultCard } from './prediction/PredictionResultCard';
@@ -213,12 +214,16 @@ export const PredictionConsole: React.FC<PredictionConsoleProps> = ({
               selectedModel,
             }),
           });
-          if (statRes.ok) {
+          const contentType = statRes.headers.get('content-type');
+          if (statRes.ok && contentType && contentType.includes('application/json')) {
             const statJson = await statRes.json();
             setStatisticalData(statJson);
+          } else {
+            setStatisticalData(runStatisticalLearningInference(inputData, selectedModel));
           }
         } catch {
           // Non-blocking statistical fallback
+          setStatisticalData(runStatisticalLearningInference(inputData, selectedModel));
         }
       } catch (err: any) {
         console.error('Prediction failed:', err);

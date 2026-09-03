@@ -44,6 +44,7 @@ import {
 } from 'recharts';
 import { AnalyticsDashboardResponse, RiskDistributionItem } from '../../types';
 import { RiskBadge } from '../common/RiskBadge';
+import { DatasetAnalyticsDashboard } from '../analytics/DatasetAnalyticsDashboard';
 
 const RISK_COLORS: Record<string, string> = {
   LOW: '#10b981', // Emerald
@@ -62,6 +63,7 @@ export const PortfolioAnalyticsPage: React.FC = () => {
     | 'driver_vehicle'
     | 'model_dist'
     | 'feature_stats'
+    | 'dataset_analytics'
   >('overview');
 
   // Filter States
@@ -120,6 +122,7 @@ export const PortfolioAnalyticsPage: React.FC = () => {
     { id: 'driver_vehicle' as const, label: 'Driver & Vehicle Analysis', icon: Car },
     { id: 'model_dist' as const, label: 'Model Prediction Distribution', icon: Layers },
     { id: 'feature_stats' as const, label: 'Feature Statistics', icon: Sliders },
+    { id: 'dataset_analytics' as const, label: 'Dataset Analytics', icon: Database },
   ];
 
   const overviewKpis = data?.overviewKpis;
@@ -735,6 +738,13 @@ export const PortfolioAnalyticsPage: React.FC = () => {
                   <span className="text-lg font-bold text-emerald-600">68.2%</span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* SECTION 8: Dataset Analytics Dashboard (Phase 4) */}
+          {activeSection === 'dataset_analytics' && (
+            <div className="pt-2">
+              <DatasetAnalyticsDashboard />
             </div>
           )}
         </>

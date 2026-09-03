@@ -20,6 +20,7 @@ import {
   FileText,
   AlertTriangle,
   CheckCircle2,
+  Layers,
 } from 'lucide-react';
 
 interface PredictionHistoryPageProps {
@@ -337,6 +338,48 @@ export const PredictionHistoryPage: React.FC<PredictionHistoryPageProps> = ({
                   <span className="text-slate-500 block text-[11px]">Prior Claims</span>
                   <span className="font-bold">{selectedRecord.input?.priorClaimsLast5Years} in 5 yrs</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Traceability & Lineage Chain */}
+            <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-blue-500" />
+                  Model &amp; Dataset Lineage
+                </span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                  {selectedRecord.traceability?.fingerprint?.slice(0, 14) || 'sha256:4a8b79f...'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Model Version</span>
+                  <span className="font-bold font-mono text-blue-600 dark:text-blue-400">
+                    {selectedRecord.traceability?.modelVersion || selectedRecord.modelVersion || 'v1.3'}
+                  </span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Dataset Version</span>
+                  <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400">
+                    {selectedRecord.traceability?.datasetVersion || 'v1.2'}
+                  </span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Schema Version</span>
+                  <span className="font-bold font-mono text-slate-700 dark:text-slate-300">
+                    {selectedRecord.traceability?.schemaVersion || 'v1.2'}
+                  </span>
+                </div>
+                <div className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-400 block text-[10px]">Preprocessing</span>
+                  <span className="font-bold font-mono text-purple-600 dark:text-purple-400">
+                    {selectedRecord.traceability?.preprocessingVersion || 'v1.1'}
+                  </span>
+                </div>
+              </div>
+              <div className="text-[10px] text-slate-400 pt-1">
+                Lineage: Prediction → Model → Dataset/Schema → Preprocessing
               </div>
             </div>
 

@@ -79,6 +79,10 @@ export interface PredictionEntity {
   policyId?: string;
   modelVersion: string;
   modelName: string;
+  datasetVersion?: string;
+  preprocessingVersion?: string;
+  schemaVersion?: string;
+  traceability?: any;
   inputSnapshot: Record<string, any>;
   claimProbability: number;
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'VERY_HIGH';

@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ShieldCheck,
   Activity,
+  GitCompare,
   BarChart3,
   Layers,
   Clock,
@@ -12,10 +13,20 @@ import {
   Monitor,
   BookOpen,
   Database,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { ModelType } from '../types';
 
-export type TabType = 'prediction' | 'dataset' | 'analytics' | 'models' | 'history' | 'actuarial' | 'settings';
+export type TabType =
+  | 'prediction'
+  | 'scenario'
+  | 'dataset'
+  | 'drift'
+  | 'analytics'
+  | 'models'
+  | 'history'
+  | 'actuarial'
+  | 'settings';
 
 interface HeaderProps {
   activeTab: TabType;
@@ -23,6 +34,7 @@ interface HeaderProps {
   theme: 'light' | 'dark' | 'system';
   onToggleTheme: () => void;
   onOpenFormulas?: () => void;
+  onOpenAICopilot?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
   theme,
   onToggleTheme,
   onOpenFormulas,
+  onOpenAICopilot,
 }) => {
   const navTabs: Array<{
     id: TabType;
@@ -38,7 +51,9 @@ export const Header: React.FC<HeaderProps> = ({
     icon: React.ComponentType<{ className?: string }>;
   }> = [
     { id: 'prediction', label: 'Prediction', icon: Activity },
+    { id: 'scenario', label: 'Scenario Analysis', icon: GitCompare },
     { id: 'dataset', label: 'Dataset Upload', icon: Database },
+    { id: 'drift', label: 'Data Drift', icon: ArrowLeftRight },
     { id: 'analytics', label: 'Portfolio Analytics', icon: BarChart3 },
     { id: 'models', label: 'Model Performance', icon: Layers },
     { id: 'history', label: 'Prediction History', icon: Clock },
@@ -99,6 +114,19 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Action Tools */}
           <div className="flex items-center gap-2">
+            {onOpenAICopilot && (
+              <button
+                type="button"
+                id="header-ai-copilot-btn"
+                onClick={onOpenAICopilot}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white shadow-sm shadow-indigo-500/20 transition-all cursor-pointer"
+                title="Open AI Copilot (Powered by Gemini & Actuarial Intelligence)"
+              >
+                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                <span className="hidden sm:inline">AI Copilot</span>
+              </button>
+            )}
+
             {onOpenFormulas && (
               <button
                 type="button"

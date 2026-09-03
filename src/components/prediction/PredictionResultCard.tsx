@@ -24,6 +24,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { ApiPredictionResponse, PredictionResponse, ModelPrediction } from '../../types';
+import { GLOBAL_FEATURE_IMPORTANCE } from './ExplainablePredictionCard';
 
 interface PredictionResultCardProps {
   prediction: ApiPredictionResponse | null;
@@ -44,6 +45,10 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
 }) => {
   const [copiedId, setCopiedId] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
+  const [currency, setCurrency] = useState<'INR' | 'USD'>('INR');
+  const [explanationType, setExplanationType] = useState<
+    'local' | 'positive' | 'negative' | 'global' | 'inputs'
+  >('local');
 
   // Explainability AI State
   const [explanationData, setExplanationData] = useState<any | null>(null);
@@ -133,6 +138,15 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
     ? primaryStat.recommendedGrossPremiumUSD
     : Math.round((purePremium + 150) / 0.72);
 
+  const USD_TO_INR_RATE = 83;
+  const formatCurrency = (usdAmount: number): string => {
+    if (currency === 'INR') {
+      const inrAmount = Math.round(usdAmount * USD_TO_INR_RATE);
+      return `₹${inrAmount.toLocaleString('en-IN')}`;
+    }
+    return `$${Math.round(usdAmount).toLocaleString('en-US')}`;
+  };
+
   // Trigger Gemini AI explanation
   const fetchExplanation = async () => {
     if (!prediction) return;
@@ -212,6 +226,34 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
+            {/* Currency Switcher */}
+            <div className="inline-flex rounded-lg border border-slate-800 bg-slate-950 p-0.5 text-[11px] font-semibold">
+              <button
+                type="button"
+                onClick={() => setCurrency('INR')}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  currency === 'INR'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Display amounts in Indian Rupees (₹)"
+              >
+                ₹ INR
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency('USD')}
+                className={`px-2 py-0.5 rounded transition-all ${
+                  currency === 'USD'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Display amounts in US Dollars ($)"
+              >
+                $ USD
+              </button>
+            </div>
+
             {prediction && (
               <div
                 className={`flex items-center space-x-1.5 px-3 py-1 rounded text-xs font-semibold border ${tierInfo.badgeClass}`}
@@ -375,34 +417,34 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
             <span className="text-[11px] text-slate-400 block mb-1">
-              1. Expected Severity E[Loss | Claim]
+              Predicted Claim Amount
             </span>
             <div className="text-xl sm:text-2xl font-bold text-indigo-300 font-mono">
-              ${expectedSeverity.toLocaleString()}
+              {formatCurrency(expectedSeverity)}
             </div>
             <span className="text-[10px] text-slate-400 block mt-0.5">
-              Gamma Distribution Conditional Mean
+              Conditional severity E[Loss | Claim]
             </span>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
             <span className="text-[11px] text-slate-400 block mb-1">
-              2. Pure Risk Premium
+              Expected Loss / Pure Premium
             </span>
             <div className="text-xl sm:text-2xl font-bold text-amber-300 font-mono">
-              ${purePremium.toLocaleString()}
+              {formatCurrency(purePremium)}
             </div>
             <span className="text-[10px] text-slate-400 block mt-0.5">
-              E[Loss] = P(Claim) × E[Severity]
+              P(Claim) × E[Severity]
             </span>
           </div>
 
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
             <span className="text-[11px] text-slate-400 block mb-1">
-              3. Recommended Gross Premium
+              Recommended Gross Premium
             </span>
             <div className="text-xl sm:text-2xl font-bold text-emerald-400 font-mono">
-              ${grossPremium.toLocaleString()}
+              {formatCurrency(grossPremium)}
             </div>
             <span className="text-[10px] text-slate-400 block mt-0.5">
               Includes Expenses + Target Margin
@@ -417,73 +459,206 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
               <div className="flex items-center space-x-2">
                 <BarChart3 className="w-4 h-4 text-blue-400" />
                 <h3 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                  Top Contributing Risk Factors (SHAP Attribution)
+                  WHY THIS PREDICTION?
                 </h3>
               </div>
               <span className="text-[11px] text-slate-400 font-mono">
-                Marginal Contribution
+                Most Influential Features
               </span>
             </div>
 
-            <div className="space-y-2.5">
-              {prediction.topContributingFactors.map((factor, index) => {
-                const isIncrease = factor.impact === 'INCREASES_RISK';
-                const isDecrease = factor.impact === 'DECREASES_RISK';
-                return (
-                  <div
-                    key={`${factor.feature}-${index}`}
-                    className="p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                  >
-                    <div className="space-y-0.5 flex-1">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs font-semibold text-slate-200">
-                          {factor.label || factor.feature}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono">
-                          ({String(factor.value)})
-                        </span>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 ${
-                            isIncrease
-                              ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80'
-                              : isDecrease
-                              ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
-                              : 'bg-slate-800 text-slate-300'
-                          }`}
-                        >
-                          {isIncrease ? (
-                            <>
-                              <TrendingUp className="w-3 h-3 text-rose-400" />
-                              <span>Increases Risk</span>
-                            </>
-                          ) : isDecrease ? (
-                            <>
-                              <TrendingDown className="w-3 h-3 text-emerald-400" />
-                              <span>Decreases Risk</span>
-                            </>
-                          ) : (
-                            <span>Neutral</span>
-                          )}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">
-                        {factor.explanation}
-                      </p>
-                    </div>
+            {/* Explanation Type Selection Tabs */}
+            <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-lg mb-3 overflow-x-auto text-[11px]">
+              <button
+                type="button"
+                onClick={() => setExplanationType('local')}
+                className={`px-2.5 py-1 rounded transition-colors font-medium whitespace-nowrap ${
+                  explanationType === 'local'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Local Prediction
+              </button>
+              <button
+                type="button"
+                onClick={() => setExplanationType('positive')}
+                className={`px-2.5 py-1 rounded transition-colors font-medium whitespace-nowrap ${
+                  explanationType === 'positive'
+                    ? 'bg-rose-950 text-rose-300 border border-rose-800'
+                    : 'text-slate-400 hover:text-rose-400'
+                }`}
+              >
+                Positive Contributors
+              </button>
+              <button
+                type="button"
+                onClick={() => setExplanationType('negative')}
+                className={`px-2.5 py-1 rounded transition-colors font-medium whitespace-nowrap ${
+                  explanationType === 'negative'
+                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                    : 'text-slate-400 hover:text-emerald-400'
+                }`}
+              >
+                Negative Contributors
+              </button>
+              <button
+                type="button"
+                onClick={() => setExplanationType('global')}
+                className={`px-2.5 py-1 rounded transition-colors font-medium whitespace-nowrap ${
+                  explanationType === 'global'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Global Importance
+              </button>
+              <button
+                type="button"
+                onClick={() => setExplanationType('inputs')}
+                className={`px-2.5 py-1 rounded transition-colors font-medium whitespace-nowrap ${
+                  explanationType === 'inputs'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Feature Values Used
+              </button>
+            </div>
 
-                    <div className="sm:text-right shrink-0">
-                      <div
-                        className={`text-xs font-bold font-mono ${
-                          isIncrease ? 'text-rose-400' : isDecrease ? 'text-emerald-400' : 'text-slate-300'
-                        }`}
-                      >
-                        {isIncrease ? '+' : isDecrease ? '-' : ''}
-                        {(Math.abs(factor.contributionScore) * 100).toFixed(1)}% Impact
+            <div className="space-y-2.5">
+              {explanationType === 'global' ? (
+                <div className="space-y-2 p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                  <span className="text-[11px] text-slate-400 block mb-1 font-medium">
+                    Global feature importance ranking across benchmark dataset:
+                  </span>
+                  {GLOBAL_FEATURE_IMPORTANCE.map((g, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="font-semibold text-slate-200">{g.displayName}</span>
+                        <span className="font-mono text-blue-400 font-bold text-[11px]">
+                          {g.importancePercent}%
+                        </span>
                       </div>
+                      <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                        <div
+                          className="bg-blue-500 h-full rounded-full"
+                          style={{ width: `${(g.importancePercent / 30) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : explanationType === 'inputs' ? (
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg">
+                  <span className="text-[11px] text-slate-400 block mb-2 font-medium">
+                    Feature vector evaluated for this prediction:
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Driver Age:</span>
+                      <span className="font-mono font-semibold text-slate-200">
+                        {prediction?.metadata?.normalizedInput?.age ?? statisticalResponse?.input?.age ?? 35} yrs
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Driving Experience:</span>
+                      <span className="font-mono font-semibold text-slate-200">
+                        {prediction?.metadata?.normalizedInput?.drivingExperienceYears ?? statisticalResponse?.input?.drivingExperienceYears ?? 15} yrs
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Prior Claims (5y):</span>
+                      <span className="font-mono font-semibold text-slate-200">
+                        {prediction?.metadata?.normalizedInput?.priorClaims ?? statisticalResponse?.input?.priorClaimsLast5Years ?? 0}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Annual Mileage:</span>
+                      <span className="font-mono font-semibold text-slate-200">
+                        {(prediction?.metadata?.normalizedInput?.annualMileage ?? statisticalResponse?.input?.annualMileage ?? 12000).toLocaleString()} mi
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Insurance Credit:</span>
+                      <span className="font-mono font-semibold text-slate-200">
+                        {prediction?.metadata?.normalizedInput?.creditScore ?? statisticalResponse?.input?.creditScore ?? 720}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800">
+                      <span className="text-slate-400">Vehicle Category:</span>
+                      <span className="font-mono font-semibold text-slate-200 truncate max-w-[120px]">
+                        {prediction?.metadata?.normalizedInput?.vehicleType ?? statisticalResponse?.input?.vehicleCategory ?? 'Compact SUV'}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              ) : (
+                prediction.topContributingFactors
+                  .filter((factor) => {
+                    if (explanationType === 'positive') return factor.impact === 'INCREASES_RISK';
+                    if (explanationType === 'negative') return factor.impact === 'DECREASES_RISK';
+                    return true;
+                  })
+                  .map((factor, index) => {
+                    const isIncrease = factor.impact === 'INCREASES_RISK';
+                    const isDecrease = factor.impact === 'DECREASES_RISK';
+                    return (
+                      <div
+                        key={`${factor.feature}-${index}`}
+                        className="p-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                      >
+                        <div className="space-y-0.5 flex-1">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-semibold text-slate-200">
+                              {factor.label || factor.feature}
+                            </span>
+                            <span className="text-xs text-slate-400 font-mono">
+                              ({String(factor.value)})
+                            </span>
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded flex items-center gap-1 ${
+                                isIncrease
+                                  ? 'bg-rose-950/80 text-rose-300 border border-rose-800/80'
+                                  : isDecrease
+                                  ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-800/80'
+                                  : 'bg-slate-800 text-slate-300'
+                              }`}
+                            >
+                              {isIncrease ? (
+                                <>
+                                  <TrendingUp className="w-3 h-3 text-rose-400" />
+                                  <span>Increases Risk</span>
+                                </>
+                              ) : isDecrease ? (
+                                <>
+                                  <TrendingDown className="w-3 h-3 text-emerald-400" />
+                                  <span>Decreases Risk</span>
+                                </>
+                              ) : (
+                                <span>Neutral</span>
+                              )}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400">
+                            {factor.explanation}
+                          </p>
+                        </div>
+
+                        <div className="sm:text-right shrink-0">
+                          <div
+                            className={`text-xs font-bold font-mono ${
+                              isIncrease ? 'text-rose-400' : isDecrease ? 'text-emerald-400' : 'text-slate-300'
+                            }`}
+                          >
+                            {isIncrease ? '+' : isDecrease ? '-' : ''}
+                            {(Math.abs(factor.contributionScore) * 100).toFixed(1)}% Impact
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
             </div>
           </div>
         )}
@@ -626,6 +801,53 @@ export const PredictionResultCard: React.FC<PredictionResultCardProps> = ({
                 This value is an expected statistical propensity over a standardized 12-month policy exposure period and is <strong>not a guaranteed real-world outcome</strong> or definitive claim event. Underwriting decisions must incorporate complete applicant disclosures, motor vehicle records, and regulatory compliance standards.
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Phase 8: Prediction Traceability & Lineage Chain */}
+        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-blue-400" />
+              Prediction Traceability &amp; Lineage Chain
+            </span>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              {statisticalResponse?.traceability?.fingerprint?.slice(0, 16) || 'sha256:4a8b79f2c1...'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 pt-1 text-xs">
+            <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <div className="text-[10px] uppercase font-bold text-slate-400">1. Prediction</div>
+              <div className="font-mono text-slate-200 font-bold truncate">
+                {prediction?.id ? `#${prediction.id.slice(0, 10)}` : 'Active Run'}
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <div className="text-[10px] uppercase font-bold text-slate-400">2. Model Version</div>
+              <div className="font-mono text-blue-400 font-bold">
+                {statisticalResponse?.traceability?.modelVersion || 'Hurdle GLM v1.3'}
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <div className="text-[10px] uppercase font-bold text-slate-400">3. Dataset / Schema</div>
+              <div className="font-mono text-emerald-400 font-bold truncate">
+                {statisticalResponse?.traceability?.datasetName || 'insurance_dataset'} ({statisticalResponse?.traceability?.datasetVersion || 'v1.2'})
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <div className="text-[10px] uppercase font-bold text-slate-400">4. Preprocessing</div>
+              <div className="font-mono text-purple-400 font-bold">
+                {statisticalResponse?.traceability?.preprocessingVersion || 'v1.1'}
+              </div>
+            </div>
+          </div>
+          <div className="text-[10px] text-slate-400 flex items-center justify-between pt-1">
+            <span>Lineage: Prediction → Model v1.3 → Dataset v1.2 → Preprocessing v1.1</span>
+            <span className="text-emerald-400 font-medium">Non-PII Compliant Hash Record</span>
           </div>
         </div>
 

@@ -39,8 +39,26 @@ app.use((req, res, next) => {
 // Mount API Routes
 app.use('/api', apiRouter);
 
+// Catch-all for undefined /api routes so they return JSON 404 and NEVER fall through to Vite HTML
+app.use('/api', (req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'NotFound',
+    message: `API route ${req.method} ${req.originalUrl} not found`,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Centralized Error Handler for API
 app.use(errorHandler);
+
+// API 404 Fallback - ensures API calls never return Vite index.html
+app.all('/api/*', (req: Request, res: Response) => {
+  res.status(404).json({
+    error: 'NotFound',
+    message: `API endpoint ${req.method} ${req.originalUrl} not found.`,
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Vite middleware & Static SPA Serving
 async function startServer() {

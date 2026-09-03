@@ -23,6 +23,37 @@ export interface PolicyholderInput {
   driverGender: 'Male' | 'Female' | 'Other';
   maritalStatus: 'Single' | 'Married' | 'Divorced';
   annualExposure: number; // in years (e.g. 1.0)
+  // Multi-line Actuarial Risk & Scenario Factors
+  bmi?: number;
+  smoking?: boolean | 'Yes' | 'No';
+  smoker?: boolean | 'Yes' | 'No';
+}
+
+export interface ScenarioFieldDiff {
+  field: keyof PolicyholderInput;
+  label: string;
+  originalValue: any;
+  scenarioValue: any;
+  isModified: boolean;
+  deltaDisplay?: string;
+  impactDirection?: 'increases_risk' | 'decreases_risk' | 'neutral';
+}
+
+export interface ScenarioComparisonResult {
+  originalPrediction: ModelPrediction;
+  scenarioPrediction: ModelPrediction;
+  originalInput: PolicyholderInput;
+  scenarioInput: PolicyholderInput;
+  absoluteChangePercent: number; // e.g. +36.4 (percentage points)
+  relativeChangePercent: number; // e.g. +115.9%
+  severityChangeUSD: number;
+  severityChangePercent: number;
+  purePremiumChangeUSD: number;
+  purePremiumChangePercent: number;
+  grossPremiumChangeUSD: number;
+  grossPremiumChangePercent: number;
+  riskTierChanged: boolean;
+  modifiedFields: ScenarioFieldDiff[];
 }
 
 export type ModelType = 'glm_logistic_gamma' | 'random_forest' | 'gradient_boosting_tweedie' | 'two_stage_hurdle';
@@ -52,6 +83,157 @@ export interface ModelPrediction {
   underwritingRecommendation: 'Accept Standard Rate' | 'Accept with Discount' | 'Accept with Surcharge' | 'Require Higher Deductible' | 'Escalate to Senior Actuary';
 }
 
+export interface DatasetVersionRecord {
+  id: string;
+  datasetName: string;         // e.g. "insurance_dataset.csv"
+  datasetVersion: string;      // e.g. "v1.2"
+  fileHash: string;            // e.g. "sha256:4a8b79f...81e2"
+  rowCount: number;            // e.g. 100000
+  columnCount: number;         // e.g. 18
+  targetVariable: string;      // e.g. "claim_occurrence"
+  importTimestamp: string;     // ISO 8601 string
+  schemaVersion: string;       // e.g. "v1.2"
+  columns?: string[];          // Feature names (no PII)
+  status?: 'active' | 'archived' | 'benchmark';
+  description?: string;
+  fileSizeBytes?: number;
+}
+
+export interface ModelVersionRecord {
+  id: string;
+  modelId: ModelType | string;
+  modelName: string;           // e.g. "Hurdle GLM"
+  modelVersion: string;        // e.g. "v1.3"
+  datasetVersion: string;      // e.g. "insurance_dataset.csv v1.2"
+  featureSchema: {
+    schemaVersion: string;
+    features: Array<{ name: string; type: string; description?: string }>;
+    totalFeatures: number;
+  };
+  preprocessingVersion: string;// e.g. "v1.2-actuarial-robust"
+  trainingTimestamp: string;   // ISO 8601 string
+  evaluationMetrics: {
+    rocAuc: number;
+    giniCoefficient: number;
+    prAuc: number;
+    brierScore: number;
+    logLoss?: number;
+    expectedCalibrationError?: number;
+    f1Score?: number;
+    accuracy?: number;
+  };
+  algorithm?: string;
+  status?: 'PRODUCTION' | 'CANDIDATE' | 'BASELINE' | 'RETIRED';
+  notes?: string;
+}
+
+export interface PredictionTraceability {
+  predictionId: string;
+  policyId?: string;
+  timestamp: string;
+  model: {
+    name: string;
+    version: string;
+    algorithm?: string;
+  };
+  dataset: {
+    name: string;
+    version: string;
+    schemaVersion: string;
+    rowCount: number;
+    columnCount: number;
+    targetVariable: string;
+    fileHash: string;
+  };
+  preprocessing: {
+    version: string;
+    schemaVersion: string;
+    featureCount: number;
+    pipeline: string;
+  };
+  lineageChain: string; // "Prediction → Model version → Dataset/schema version → Preprocessing version"
+  traceHash: string;    // SHA-256 audit fingerprint
+  dataPrivacyNotice: string; // "Zero sensitive personal data exposed in audit trail"
+}
+
+// ----------------------------------------------------------------------
+// Phase 9: Data Drift Detection Types
+// ----------------------------------------------------------------------
+export type DriftSeverity = 'Low' | 'Medium' | 'High';
+
+export interface DistributionBin {
+  binLabel: string;
+  refPercentage: number; // 0 - 100
+  newPercentage: number; // 0 - 100
+  contributionToPsi: number;
+}
+
+export interface FeatureDriftResult {
+  featureName: string;
+  displayName: string;
+  featureType: 'numerical' | 'categorical';
+  driftStatus: DriftSeverity;
+  psi: number; // Population Stability Index
+  ksStatistic?: number; // Kolmogorov-Smirnov test D statistic (numerical only)
+  ksPValue?: number;    // KS test p-value
+  tvd?: number;          // Total Variation Distance (categorical)
+  newCategories?: string[]; // Newly observed category values not in reference
+  referenceStats: {
+    mean?: number;
+    std?: number;
+    median?: number;
+    q25?: number;
+    q75?: number;
+    min?: number;
+    max?: number;
+    categoryFrequencies?: Record<string, number>;
+  };
+  newStats: {
+    mean?: number;
+    std?: number;
+    median?: number;
+    q25?: number;
+    q75?: number;
+    min?: number;
+    max?: number;
+    categoryFrequencies?: Record<string, number>;
+  };
+  distributionShiftSummary: string;
+  statisticalMethodUsed: string;
+  interpretation: string;
+  actuarialRecommendation: string;
+  bins?: DistributionBin[];
+}
+
+export interface DataDriftReport {
+  id: string;
+  timestamp: string;
+  referenceDataset: {
+    name: string;
+    version: string;
+    rowCount: number;
+    schemaVersion: string;
+  };
+  newDataset: {
+    name: string;
+    version: string;
+    rowCount: number;
+    schemaVersion: string;
+  };
+  overallDriftStatus: DriftSeverity;
+  overallPsiScore: number;
+  summaryMetrics: {
+    totalFeaturesAnalyzed: number;
+    highDriftCount: number;
+    mediumDriftCount: number;
+    lowDriftCount: number;
+    newCategoriesDetectedTotal: number;
+  };
+  features: FeatureDriftResult[];
+  keyFindings: string[];
+  actuarialGuidance: string[];
+}
+
 export interface PredictionResponse {
   timestamp: string;
   policyId: string;
@@ -61,6 +243,7 @@ export interface PredictionResponse {
   shapAttributions: SHAPFeatureContribution[];
   baseClaimRatePercent: number;
   actuarialNotes: string[];
+  traceability?: PredictionTraceability;
 }
 
 export interface BenchmarkModelMetrics {

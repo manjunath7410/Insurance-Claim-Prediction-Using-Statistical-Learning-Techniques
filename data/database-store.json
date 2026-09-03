@@ -1,0 +1,3181 @@
+{
+  "version": "2.4.0",
+  "savedAt": "2026-09-03T06:21:19.920Z",
+  "predictions": [
+    {
+      "id": "pred_iaot8k1_1788416477364",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_ena9fhp_1788416477363",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T06:21:17.364Z"
+    },
+    {
+      "id": "pred_5f5tpo7_1788416477364",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_uk75g4j_1788416477364",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T06:21:17.364Z"
+    },
+    {
+      "id": "pred_sten36n_1788416477364",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:21:17.364Z"
+    },
+    {
+      "id": "pred_vu1lexg_1788416144647",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_c79ei4v_1788416144646",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T06:15:44.647Z"
+    },
+    {
+      "id": "pred_ajj528j_1788416144647",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_zdb5oni_1788416144646",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T06:15:44.647Z"
+    },
+    {
+      "id": "pred_btpg9ju_1788416144647",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:15:44.647Z"
+    },
+    {
+      "id": "pred_59ld4y1_1788416100394",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_k6t8px4_1788416100393",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T06:15:00.394Z"
+    },
+    {
+      "id": "pred_et8ilkk_1788416100394",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_ttks49k_1788416100393",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T06:15:00.394Z"
+    },
+    {
+      "id": "pred_qrxism3_1788416100394",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:15:00.394Z"
+    },
+    {
+      "id": "pred_0pr077g_1788415775155",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_z9jmjkv_1788415775154",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T06:09:35.155Z"
+    },
+    {
+      "id": "pred_acd5h9w_1788415775155",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_0bjtd9t_1788415775154",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T06:09:35.155Z"
+    },
+    {
+      "id": "pred_3jsgnu3_1788415775155",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:09:35.155Z"
+    },
+    {
+      "id": "pred_6n61hhf_1788415417948",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_m9r18jh_1788415417948",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T06:03:37.948Z"
+    },
+    {
+      "id": "pred_2luyfv2_1788415417949",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_68bncy5_1788415417948",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T06:03:37.949Z"
+    },
+    {
+      "id": "pred_mmibpp7_1788415417949",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:03:37.949Z"
+    },
+    {
+      "id": "pred_6wyk6vb_1788414929518",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_ows6pt0_1788414929517",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:55:29.518Z"
+    },
+    {
+      "id": "pred_1uaht62_1788414929518",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_rdnvfe9_1788414929517",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:55:29.518Z"
+    },
+    {
+      "id": "pred_p3wuzii_1788414929518",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:55:29.518Z"
+    },
+    {
+      "id": "pred_nmnbiqi_1788414909905",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_wmwct7b_1788414909905",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:55:09.905Z"
+    },
+    {
+      "id": "pred_skda5vo_1788414909906",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_zekd7sn_1788414909905",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:55:09.906Z"
+    },
+    {
+      "id": "pred_cgh4e9g_1788414909906",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:55:09.906Z"
+    },
+    {
+      "id": "pred_jkubssg_1788414672557",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_brp4hft_1788414672556",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:51:12.557Z"
+    },
+    {
+      "id": "pred_8vjgmtj_1788414672557",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_8ljzit1_1788414672556",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:51:12.557Z"
+    },
+    {
+      "id": "pred_an0m2e7_1788414672557",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:51:12.557Z"
+    },
+    {
+      "id": "pred_euoitwl_1788414597086",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_k62i4t1_1788414597085",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:49:57.086Z"
+    },
+    {
+      "id": "pred_fsw9828_1788414597086",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_6qc5cma_1788414597085",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:49:57.086Z"
+    },
+    {
+      "id": "pred_11vizkj_1788414597086",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:49:57.086Z"
+    },
+    {
+      "id": "pred_0szuuqf_1788413871387",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_brtd2is_1788413871386",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:37:51.387Z"
+    },
+    {
+      "id": "pred_ndoxbby_1788413871387",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_860koqk_1788413871387",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:37:51.387Z"
+    },
+    {
+      "id": "pred_wdy55k2_1788413871387",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:37:51.387Z"
+    },
+    {
+      "id": "pred_oto8ibl_1788413851981",
+      "predictionId": "pred_cas_001_samantha",
+      "policyId": "POL-CA-889124",
+      "customerId": "cust_2o132yh_1788413851980",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 37,
+        "drivingExperienceYears": 18,
+        "creditScore": 785,
+        "creditTier": "Exceptional (800+)",
+        "annualMileage": 11000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 4,
+        "vehicleValue": 34000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 5,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.038,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3650,
+      "purePremiumUSD": 138.7,
+      "grossPremiumUSD": 198.14,
+      "topAttributions": [
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "DECREASES_RISK",
+          "description": "Zero prior claims reduces propensity."
+        },
+        {
+          "feature": "creditScore",
+          "impact": "DECREASES_RISK",
+          "description": "Exceptional credit history favorable risk."
+        }
+      ],
+      "inferenceTimeMs": 11,
+      "createdAt": "2026-09-03T05:37:31.981Z"
+    },
+    {
+      "id": "pred_lgiirkn_1788413851981",
+      "predictionId": "pred_cas_002_devon",
+      "policyId": "POL-IL-441209",
+      "customerId": "cust_ynrj7j8_1788413851980",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 21,
+        "drivingExperienceYears": 3,
+        "creditScore": 590,
+        "creditTier": "Fair (580-669)",
+        "annualMileage": 22000,
+        "vehicleCategory": "Luxury / Sports",
+        "vehicleAge": 2,
+        "vehicleValue": 58000,
+        "regionalZone": "Metro High-Congestion (Zone D)",
+        "coverageTier": "Full Comprehensive + Zero-Dep",
+        "deductible": 250,
+        "priorClaimsLast5Years": 2,
+        "trafficViolationsCount": 1,
+        "antiTheftDevice": false,
+        "policyTenureYears": 1,
+        "driverGender": "Male",
+        "maritalStatus": "Single",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.185,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 7200,
+      "purePremiumUSD": 1332,
+      "grossPremiumUSD": 1902.85,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "INCREASES_RISK",
+          "description": "Young driver segment under 25 elevated frequency."
+        },
+        {
+          "feature": "priorClaimsLast5Years",
+          "impact": "INCREASES_RISK",
+          "description": "Two recent losses heighten recurrence probability."
+        }
+      ],
+      "inferenceTimeMs": 14,
+      "createdAt": "2026-09-03T05:37:31.981Z"
+    },
+    {
+      "id": "pred_ts39pa8_1788413851981",
+      "predictionId": "pred_cas_003_standard",
+      "policyId": "POL-TX-902188",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Platt Calibrated)",
+      "inputSnapshot": {
+        "age": 45,
+        "drivingExperienceYears": 25,
+        "creditScore": 710,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 13500,
+        "vehicleCategory": "Economy Sedan",
+        "vehicleAge": 6,
+        "vehicleValue": 22000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 4,
+        "driverGender": "Male",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.058,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "expectedSeverityUSD": 3950,
+      "purePremiumUSD": 229.1,
+      "grossPremiumUSD": 327.28,
+      "topAttributions": [
+        {
+          "feature": "drivingExperienceYears",
+          "impact": "DECREASES_RISK",
+          "description": "25 years clean experience."
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:37:31.981Z"
+    },
+    {
+      "id": "pred_rbmfror_1788413854314",
+      "predictionId": "pred_test_u1_1788413854314",
+      "userId": "usr_2qt14ux_1788413854313",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T05:37:34.314Z"
+    },
+    {
+      "id": "pred_s5i8k88_1788413854314",
+      "predictionId": "pred_test_other_1788413854314",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:37:34.314Z"
+    },
+    {
+      "id": "pred_owcvjak_1788413854319",
+      "predictionId": "pred_act_1788413854319_de803549",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T05:37:34.319Z"
+    },
+    {
+      "id": "pred_zlz9l4m_1788414288068",
+      "predictionId": "pred_act_1788414288067_4e635f58",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T05:44:48.068Z"
+    },
+    {
+      "id": "pred_ic77ffi_1788414288105",
+      "predictionId": "pred_act_1788414288105_a8c77c87",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T05:44:48.105Z"
+    },
+    {
+      "id": "pred_5xsadjz_1788414599582",
+      "predictionId": "pred_test_u1_1788414599582",
+      "userId": "usr_k2s6ejq_1788414599581",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T05:49:59.582Z"
+    },
+    {
+      "id": "pred_qz3b298_1788414599582",
+      "predictionId": "pred_test_other_1788414599582",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:49:59.582Z"
+    },
+    {
+      "id": "pred_t2lioik_1788414599585",
+      "predictionId": "pred_act_1788414599585_7b5003eb",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T05:49:59.585Z"
+    },
+    {
+      "id": "pred_skgxxig_1788414674981",
+      "predictionId": "pred_test_u1_1788414674981",
+      "userId": "usr_65rb25r_1788414674981",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T05:51:14.981Z"
+    },
+    {
+      "id": "pred_w29t3ly_1788414674981",
+      "predictionId": "pred_test_other_1788414674981",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:51:14.981Z"
+    },
+    {
+      "id": "pred_4b8r6m3_1788414674985",
+      "predictionId": "pred_act_1788414674985_bc1b1128",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T05:51:14.985Z"
+    },
+    {
+      "id": "pred_qo4qobr_1788414912333",
+      "predictionId": "pred_test_u1_1788414912333",
+      "userId": "usr_93cc24q_1788414912332",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T05:55:12.333Z"
+    },
+    {
+      "id": "pred_5d0iyxa_1788414912333",
+      "predictionId": "pred_test_other_1788414912333",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T05:55:12.333Z"
+    },
+    {
+      "id": "pred_v4r8sat_1788414912338",
+      "predictionId": "pred_act_1788414912338_6b53edf7",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T05:55:12.338Z"
+    },
+    {
+      "id": "pred_b9jipgy_1788414940122",
+      "predictionId": "pred_act_1788414940122_375367c0",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T05:55:40.122Z"
+    },
+    {
+      "id": "pred_2c7geer_1788414940171",
+      "predictionId": "pred_act_1788414940171_0065c05e",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T05:55:40.171Z"
+    },
+    {
+      "id": "pred_7ycvfr2_1788415638485",
+      "predictionId": "pred_act_1788415638485_b0452db1",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T06:07:18.485Z"
+    },
+    {
+      "id": "pred_iry8f9m_1788415638537",
+      "predictionId": "pred_act_1788415638537_7b7f5d6e",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T06:07:18.537Z"
+    },
+    {
+      "id": "pred_3nxvgrb_1788415777633",
+      "predictionId": "pred_test_u1_1788415777633",
+      "userId": "usr_6cvt517_1788415777632",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T06:09:37.633Z"
+    },
+    {
+      "id": "pred_02amadn_1788415777633",
+      "predictionId": "pred_test_other_1788415777633",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:09:37.633Z"
+    },
+    {
+      "id": "pred_7phmrve_1788415777637",
+      "predictionId": "pred_act_1788415777637_66fb174b",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T06:09:37.637Z"
+    },
+    {
+      "id": "pred_gdfiycw_1788416102912",
+      "predictionId": "pred_test_u1_1788416102912",
+      "userId": "usr_aavhxmf_1788416102911",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T06:15:02.912Z"
+    },
+    {
+      "id": "pred_176znh1_1788416102912",
+      "predictionId": "pred_test_other_1788416102912",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:15:02.912Z"
+    },
+    {
+      "id": "pred_0c6yynq_1788416102916",
+      "predictionId": "pred_act_1788416102916_7c6941ee",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T06:15:02.916Z"
+    },
+    {
+      "id": "pred_462nr4y_1788416301720",
+      "predictionId": "pred_act_1788416301720_7effd254",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T06:18:21.720Z"
+    },
+    {
+      "id": "pred_74fbtmh_1788416301753",
+      "predictionId": "pred_act_1788416301753_8d35e285",
+      "modelVersion": "v1.0.0-glm-logistic-baseline",
+      "modelName": "Actuarial GLM Logistic Baseline",
+      "inputSnapshot": {
+        "id": "POL-2026-8819",
+        "age": 35,
+        "drivingExperienceYears": 15,
+        "creditScore": 720,
+        "creditTier": "Good (670-739)",
+        "annualMileage": 12000,
+        "vehicleCategory": "Compact SUV",
+        "vehicleAge": 3,
+        "vehicleValue": 28000,
+        "regionalZone": "Suburban Moderate (Zone B)",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 750,
+        "priorClaimsLast5Years": 0,
+        "trafficViolationsCount": 0,
+        "antiTheftDevice": true,
+        "policyTenureYears": 3,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "annualExposure": 1
+      },
+      "claimProbability": 0.0584,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.12,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 12,
+      "createdAt": "2026-09-03T06:18:21.753Z"
+    },
+    {
+      "id": "pred_o7q5ltt_1788416479841",
+      "predictionId": "pred_test_u1_1788416479841",
+      "userId": "usr_5qd4p17_1788416479840",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 34,
+        "vehicleCategory": "Compact SUV"
+      },
+      "claimProbability": 0.045,
+      "riskLevel": "LOW",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "-12%"
+        }
+      ],
+      "inferenceTimeMs": 8,
+      "createdAt": "2026-09-03T06:21:19.841Z"
+    },
+    {
+      "id": "pred_fkmqsuz_1788416479841",
+      "predictionId": "pred_test_other_1788416479841",
+      "userId": "usr_other_person_99",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees",
+      "inputSnapshot": {
+        "age": 22,
+        "vehicleCategory": "Sports"
+      },
+      "claimProbability": 0.12,
+      "riskLevel": "HIGH",
+      "isClaimPredicted": true,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "age",
+          "impact": "+24%"
+        }
+      ],
+      "inferenceTimeMs": 9,
+      "createdAt": "2026-09-03T06:21:19.841Z"
+    },
+    {
+      "id": "pred_kz5cae2_1788416479845",
+      "predictionId": "pred_act_1788416479845_1e6a7643",
+      "userId": "usr_test_actuary",
+      "modelVersion": "v1.2.0-gbdt-calibrated-platt",
+      "modelName": "Gradient Boosted Trees (Calibrated Platt Sigmoid)",
+      "inputSnapshot": {
+        "age": 35,
+        "drivingExperienceYears": 17,
+        "creditScore": 740,
+        "driverGender": "Female",
+        "maritalStatus": "Married",
+        "coverageTier": "Standard Comprehensive",
+        "deductible": 500,
+        "exposure": 1,
+        "policyTenureYears": 4,
+        "vehicleType": "Compact SUV",
+        "vehicleValue": 32000,
+        "vehicleAge": 3,
+        "annualMileage": 12000,
+        "antiTheftDevice": true,
+        "priorClaims": 0,
+        "trafficViolationsCount": 0,
+        "regionalZone": "Suburban Moderate"
+      },
+      "claimProbability": 0.0638,
+      "riskLevel": "MEDIUM",
+      "isClaimPredicted": false,
+      "thresholdApplied": 0.08,
+      "topAttributions": [
+        {
+          "feature": "prior_claims",
+          "label": "Clean Claims History",
+          "impact": "DECREASES_RISK",
+          "value": 0,
+          "contributionScore": -0.028,
+          "explanation": "Zero prior claims in past 5 years grants significant actuarial no-claims discount."
+        },
+        {
+          "feature": "driver_age",
+          "label": "Driver Age (Prime Demographics)",
+          "impact": "DECREASES_RISK",
+          "value": 35,
+          "contributionScore": -0.015,
+          "explanation": "Driver age (35 yrs) sits in mature, low-risk actuarial cohort."
+        }
+      ],
+      "inferenceTimeMs": 10,
+      "createdAt": "2026-09-03T06:21:19.845Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "aud_mnqvuxc_1788416477364",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:21:17.364Z"
+    },
+    {
+      "id": "aud_4oobm8o_1788416477365",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:21:17.365Z"
+    },
+    {
+      "id": "aud_esn12gf_1788416144647",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:15:44.647Z"
+    },
+    {
+      "id": "aud_2thcdcq_1788416144648",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:15:44.648Z"
+    },
+    {
+      "id": "aud_oh9kgrr_1788416100394",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:15:00.394Z"
+    },
+    {
+      "id": "aud_yiwldb6_1788416100394",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:15:00.394Z"
+    },
+    {
+      "id": "aud_i27q008_1788415775155",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:09:35.155Z"
+    },
+    {
+      "id": "aud_pwa1rjh_1788415775156",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:09:35.156Z"
+    },
+    {
+      "id": "aud_iqksaim_1788415417949",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:03:37.949Z"
+    },
+    {
+      "id": "aud_4lj8dbx_1788415417949",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:03:37.949Z"
+    },
+    {
+      "id": "aud_afw91sf_1788414929518",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:29.518Z"
+    },
+    {
+      "id": "aud_obrv7jo_1788414929518",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:29.518Z"
+    },
+    {
+      "id": "aud_zxcy0wy_1788414909906",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:09.906Z"
+    },
+    {
+      "id": "aud_j0niswm_1788414909906",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:09.906Z"
+    },
+    {
+      "id": "aud_6bqqrma_1788414672557",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:51:12.557Z"
+    },
+    {
+      "id": "aud_kcpx8bx_1788414672558",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:51:12.558Z"
+    },
+    {
+      "id": "aud_35dpeoi_1788414597086",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:49:57.086Z"
+    },
+    {
+      "id": "aud_rbb6wcb_1788414597086",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:49:57.086Z"
+    },
+    {
+      "id": "aud_dbbjns7_1788413871387",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:37:51.387Z"
+    },
+    {
+      "id": "aud_opyaoqm_1788413871388",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:37:51.388Z"
+    },
+    {
+      "id": "aud_y230jo0_1788413851982",
+      "action": "SYSTEM_BOOTSTRAP",
+      "resource": "database/schema",
+      "details": {
+        "version": "2.4.0",
+        "partitions": 8,
+        "seedEntities": "active"
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:37:31.982Z"
+    },
+    {
+      "id": "aud_q9z9aau_1788413851982",
+      "userRole": "ADMIN",
+      "action": "MODEL_CHAMPION_ACTIVATION",
+      "resource": "models/v1.2.0-gbdt-calibrated-platt",
+      "details": {
+        "champion": "v1.2.0-gbdt-calibrated-platt",
+        "prior": "v1.1.0-hurdle-poisson",
+        "threshold": 0.08
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:37:31.982Z"
+    },
+    {
+      "id": "aud_ziclzs2_1788413854315",
+      "userId": "usr_2qt14ux_1788413854313",
+      "userEmail": "test.user.1788413854305@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_dbuoqlx_1788413854314",
+      "details": {
+        "policyNumber": "POL-TX-1788413854314",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T05:37:34.315Z"
+    },
+    {
+      "id": "aud_x5o02bm_1788414288068",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788414288067_4e635f58",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:44:48.068Z"
+    },
+    {
+      "id": "aud_0y9zpy8_1788414288105",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788414288105_a8c77c87",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:44:48.105Z"
+    },
+    {
+      "id": "aud_9g5xzvx_1788414599583",
+      "userId": "usr_k2s6ejq_1788414599581",
+      "userEmail": "test.user.1788414599574@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_5zye8ry_1788414599582",
+      "details": {
+        "policyNumber": "POL-TX-1788414599582",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T05:49:59.583Z"
+    },
+    {
+      "id": "aud_ptcu6pe_1788414674982",
+      "userId": "usr_65rb25r_1788414674981",
+      "userEmail": "test.user.1788414674973@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_cxr10tz_1788414674981",
+      "details": {
+        "policyNumber": "POL-TX-1788414674981",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T05:51:14.982Z"
+    },
+    {
+      "id": "aud_9gbomqa_1788414912334",
+      "userId": "usr_93cc24q_1788414912332",
+      "userEmail": "test.user.1788414912325@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_317t1yq_1788414912333",
+      "details": {
+        "policyNumber": "POL-TX-1788414912333",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:12.334Z"
+    },
+    {
+      "id": "aud_w8mn9ak_1788414940122",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788414940122_375367c0",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:40.122Z"
+    },
+    {
+      "id": "aud_35nq1at_1788414940171",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788414940171_0065c05e",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T05:55:40.171Z"
+    },
+    {
+      "id": "aud_jz7brne_1788415638486",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788415638485_b0452db1",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:07:18.486Z"
+    },
+    {
+      "id": "aud_l8nr34n_1788415638537",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788415638537_7b7f5d6e",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:07:18.537Z"
+    },
+    {
+      "id": "aud_z8c1xq2_1788415777634",
+      "userId": "usr_6cvt517_1788415777632",
+      "userEmail": "test.user.1788415777624@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_oq5phlr_1788415777632",
+      "details": {
+        "policyNumber": "POL-TX-1788415777632",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T06:09:37.634Z"
+    },
+    {
+      "id": "aud_qap5rtl_1788416102913",
+      "userId": "usr_aavhxmf_1788416102911",
+      "userEmail": "test.user.1788416102904@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_auo21gw_1788416102912",
+      "details": {
+        "policyNumber": "POL-TX-1788416102912",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T06:15:02.913Z"
+    },
+    {
+      "id": "aud_3wvtext_1788416301721",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788416301720_7effd254",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:18:21.721Z"
+    },
+    {
+      "id": "aud_ho3hbkz_1788416301753",
+      "action": "PREDICTION_EXECUTED",
+      "resource": "predictions/pred_act_1788416301753_8d35e285",
+      "details": {
+        "modelVersion": "v1.0.0-glm-logistic-baseline",
+        "probability": 0.0584,
+        "riskLevel": "MEDIUM",
+        "isClaimPredicted": false
+      },
+      "ipAddress": "127.0.0.1",
+      "success": true,
+      "timestamp": "2026-09-03T06:18:21.753Z"
+    },
+    {
+      "id": "aud_oh9ygzj_1788416479842",
+      "userId": "usr_5qd4p17_1788416479840",
+      "userEmail": "test.user.1788416479832@actuarial.ai",
+      "userRole": "USER",
+      "action": "POLICY_UNDERWRITING_DECISION",
+      "resource": "policies/pol_11d6k3j_1788416479841",
+      "details": {
+        "policyNumber": "POL-TX-1788416479841",
+        "decision": "Approved standard tier",
+        "password": "[REDACTED]",
+        "apiKey": "[REDACTED]",
+        "creditCard": "[REDACTED]",
+        "riskTier": "Standard"
+      },
+      "ipAddress": "192.168.1.100",
+      "success": true,
+      "timestamp": "2026-09-03T06:21:19.842Z"
+    }
+  ]
+}

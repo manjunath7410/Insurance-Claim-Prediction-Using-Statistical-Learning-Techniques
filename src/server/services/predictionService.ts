@@ -28,6 +28,8 @@ export interface NormalizedPolicyholderInput {
   exposure: number;
   deductible: number;
   coverageTier: string;
+  bmi?: number;
+  smoking?: boolean | 'Yes' | 'No';
 }
 
 export class ValidationError extends Error {
@@ -230,6 +232,28 @@ export class PredictionService {
 
     const coverageTier = String(getVal('coverageTier', 'coverage_tier') || 'Standard Comprehensive').trim();
 
+    // 11. Optional BMI & Smoking for multi-line scenario analysis
+    const rawBmi = getVal('bmi', 'body_mass_index');
+    let bmi: number | undefined = undefined;
+    if (rawBmi !== undefined && rawBmi !== '') {
+      const numBmi = Number(rawBmi);
+      if (!isNaN(numBmi) && numBmi >= 10 && numBmi <= 80) {
+        bmi = numBmi;
+      }
+    }
+
+    const rawSmoking = getVal('smoking', 'smoker');
+    let smoking: boolean | 'Yes' | 'No' | undefined = undefined;
+    if (rawSmoking !== undefined) {
+      if (typeof rawSmoking === 'boolean') {
+        smoking = rawSmoking;
+      } else if (String(rawSmoking).toLowerCase() === 'yes' || String(rawSmoking).toLowerCase() === 'true') {
+        smoking = 'Yes';
+      } else if (String(rawSmoking).toLowerCase() === 'no' || String(rawSmoking).toLowerCase() === 'false') {
+        smoking = 'No';
+      }
+    }
+
     if (errors.length > 0) {
       throw new ValidationError(errors);
     }
@@ -247,6 +271,8 @@ export class PredictionService {
       exposure,
       deductible,
       coverageTier,
+      bmi,
+      smoking,
     };
   }
 

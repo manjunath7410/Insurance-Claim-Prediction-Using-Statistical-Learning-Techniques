@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import {
   UserEntity,
   CustomerEntity,
@@ -51,8 +53,86 @@ export class InMemoryDatabase {
   private predictionsByUser = new Map<string, Set<string>>(); // userId -> Set<predictionId>
   private auditLogsByUser = new Map<string, Set<string>>(); // userId -> Set<auditLogId>
 
+  private persistTimer: NodeJS.Timeout | null = null;
+  private persistenceFilePath: string = path.join(process.cwd(), 'data', 'database-store.json');
+
   constructor() {
     this.seedInitialData();
+    this.loadFromDisk();
+  }
+
+  /**
+   * Non-blocking debounced disk persistence to survive dev server restarts
+   */
+  public scheduleDiskPersist() {
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
+    if (this.persistTimer) return;
+
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null;
+      this.flushToDisk();
+    }, 1000);
+  }
+
+  public flushToDisk(): void {
+    try {
+      const dir = path.dirname(this.persistenceFilePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      const serialized = {
+        version: '2.4.0',
+        savedAt: new Date().toISOString(),
+        predictions: Array.from(this.predictions.values()).slice(-1000), // Persist last 1,000 predictions
+        auditLogs: Array.from(this.auditLogs.values()).slice(-500),
+      };
+
+      fs.writeFileSync(this.persistenceFilePath, JSON.stringify(serialized, null, 2), 'utf-8');
+    } catch (err) {
+      // In-memory operation remains resilient even if disk write is constrained
+      console.warn('Database disk persistence skipped:', (err as any)?.message);
+    }
+  }
+
+  public loadFromDisk(): void {
+    try {
+      if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
+      if (!fs.existsSync(this.persistenceFilePath)) return;
+
+      const raw = fs.readFileSync(this.persistenceFilePath, 'utf-8');
+      const data = JSON.parse(raw);
+
+      if (Array.isArray(data.predictions)) {
+        for (const pred of data.predictions) {
+          if (pred.id && !this.predictions.has(pred.id)) {
+            this.predictions.set(pred.id, pred);
+            if (pred.userId) {
+              if (!this.predictionsByUser.has(pred.userId)) {
+                this.predictionsByUser.set(pred.userId, new Set());
+              }
+              this.predictionsByUser.get(pred.userId)!.add(pred.id);
+            }
+          }
+        }
+      }
+
+      if (Array.isArray(data.auditLogs)) {
+        for (const log of data.auditLogs) {
+          if (log.id && !this.auditLogs.has(log.id)) {
+            this.auditLogs.set(log.id, log);
+            if (log.userId) {
+              if (!this.auditLogsByUser.has(log.userId)) {
+                this.auditLogsByUser.set(log.userId, new Set());
+              }
+              this.auditLogsByUser.get(log.userId)!.add(log.id);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Database disk hydration skipped:', (err as any)?.message);
+    }
   }
 
   // =========================================================================
@@ -413,7 +493,41 @@ export class InMemoryDatabase {
       this.predictionsByUser.get(entity.userId)!.add(id);
     }
 
+    this.scheduleDiskPersist();
     return entity;
+  }
+
+  public recordBatchPredictions(records: Array<Omit<PredictionEntity, 'id' | 'createdAt'>>): PredictionEntity[] {
+    const created: PredictionEntity[] = [];
+    const now = new Date().toISOString();
+
+    for (let i = 0; i < records.length; i++) {
+      const predData = records[i];
+      if (typeof predData.claimProbability !== 'number' || predData.claimProbability < 0 || predData.claimProbability > 1) {
+        throw new DatabaseValidationError('Claim probability must be between 0 and 1.', 'claimProbability');
+      }
+
+      const id = `pred_${Math.random().toString(36).substring(2, 9)}_${Date.now()}_${i}`;
+      const entity: PredictionEntity = {
+        id,
+        ...predData,
+        createdAt: now,
+      };
+
+      this.predictions.set(id, entity);
+
+      if (entity.userId) {
+        if (!this.predictionsByUser.has(entity.userId)) {
+          this.predictionsByUser.set(entity.userId, new Set());
+        }
+        this.predictionsByUser.get(entity.userId)!.add(id);
+      }
+
+      created.push(entity);
+    }
+
+    this.scheduleDiskPersist();
+    return created;
   }
 
   public findPredictionById(id: string): PredictionEntity | null {

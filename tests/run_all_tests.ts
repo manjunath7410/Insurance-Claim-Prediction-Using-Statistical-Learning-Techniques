@@ -11,6 +11,8 @@ import { runPhase9ExplainabilityTests } from './phase9_explainability.test';
 import { runPhase10ModelManagementTests } from './phase10_model_management.test';
 import { runPerformanceAndHardeningTests } from './performance.test';
 import { runPhase15DeploymentTests } from './phase15_deployment.test';
+import { runLargeDatasetImportTests } from './large_dataset_import.test';
+import { runPhase5ModelValidationTests } from './phase5_model_validation.test';
 
 console.log('===========================================================');
 console.log('INSURANCE RISK INTELLIGENCE PLATFORM - TEST SUITE RUNNER');
@@ -120,7 +122,7 @@ try {
   allErrors.push(`Phase 12 Performance & Hardening tests failed: ${err?.message}`);
 }
 
-console.log('\n[13/13] Running Phase 15 Production Deployment, Configuration & Health-Check Tests...');
+console.log('\n[13/14] Running Phase 15 Production Deployment, Configuration & Health-Check Tests...');
 try {
   const p15Results = await runPhase15DeploymentTests();
   totalPassed += p15Results.passed;
@@ -130,6 +132,30 @@ try {
 } catch (err: any) {
   totalFailed += 1;
   allErrors.push(`Phase 15 Production Deployment tests failed: ${err?.message}`);
+}
+
+console.log('\n[14/15] Running Phase 3 Large Dataset Import & Analysis System Tests (100k Rows, Validation, Health)...');
+try {
+  const importResults = await runLargeDatasetImportTests();
+  totalPassed += importResults.passed;
+  totalFailed += importResults.failed;
+  allErrors.push(...importResults.errors);
+  console.log(`      Passed: ${importResults.passed} | Failed: ${importResults.failed}`);
+} catch (err: any) {
+  totalFailed += 1;
+  allErrors.push(`Phase 3 Large Dataset Import tests failed: ${err?.message}`);
+}
+
+console.log('\n[15/15] Running Phase 5 Model Performance & Statistical Validation Tests (Metrics, GLM, Selection)...');
+try {
+  const p5ValResults = runPhase5ModelValidationTests();
+  totalPassed += p5ValResults.passed;
+  totalFailed += p5ValResults.failed;
+  allErrors.push(...p5ValResults.errors);
+  console.log(`      Passed: ${p5ValResults.passed} | Failed: ${p5ValResults.failed}`);
+} catch (err: any) {
+  totalFailed += 1;
+  allErrors.push(`Phase 5 Model Validation tests failed: ${err?.message}`);
 }
 
 console.log('\n===========================================================');

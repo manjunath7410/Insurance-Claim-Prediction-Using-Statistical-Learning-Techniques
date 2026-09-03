@@ -325,6 +325,7 @@ STRICT INVARIANTS & CONSTRAINTS:
 3. You MUST NOT invent features, prior accidents, or evidence not provided in the inputs below.
 4. You MUST NOT claim deterministic certainty (e.g. do not say "this driver will have an accident"). Use actuarial likelihood terms (e.g., "elevated expected claim frequency").
 5. The ML statistical model is the authoritative decision engine. You are only an explanatory layer.
+6. CAUSALITY RULE: You MUST NOT claim causality. Use "associated with" or "correlates with" rather than "caused by" or "causes" since this is an observational risk model, not a causal inference experiment.
 
 AUTHORITATIVE MODEL PREDICTION:
 - Model: ${modelName} (${modelVersion})
@@ -738,7 +739,13 @@ Format your output as a strict JSON object with these sections:
       .map((f) => `${f.label || f.feature} (${f.impact === 'INCREASES_RISK' ? '+' : '-'}${(Math.abs(f.contributionScore) * 100).toFixed(1)}%)`)
       .join(' and ');
 
-    const executiveSummary = `The statistical learning engine evaluated this policy profile at an estimated claim probability of ${probPercent}%, classifying it as ${riskLevel} risk. Key drivers include ${riskDriversText || 'standard baseline parameters'}.`;
+    const executiveSummary = `The predicted claim risk is ${
+      riskLevel === 'HIGH' || riskLevel === 'VERY_HIGH'
+        ? 'elevated'
+        : riskLevel === 'MEDIUM'
+        ? 'moderate'
+        : 'low'
+    } mainly associated with ${riskDriversText || 'standard baseline exposure parameters'}.`;
 
     const naturalLanguageExplanation = `Based on the authoritative ${modelName} (${modelVersion}) model, the policyholder exhibits an expected annual claim propensity of ${probPercent}%, compared against the calibrated decision threshold of ${thresholdPercent}%. 
 
