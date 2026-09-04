@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html {
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";
@@ -20,7 +22,8 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .dark body {
+  .dark body,
+  html.dark body {
     background-color: #090d16;
     color: #f8fafc;
   }

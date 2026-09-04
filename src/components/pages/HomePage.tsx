@@ -20,11 +20,13 @@ import {
   FileText,
   GitCompare,
   Cpu,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 
 interface HomePageProps {
   onStartRiskCheck: () => void;
   onLearnMore?: () => void;
+  onOpenSettings?: () => void;
   onOpenAICopilot?: () => void;
   onNavigateToProPortal?: (proTab?: string) => void;
 }
@@ -32,6 +34,7 @@ interface HomePageProps {
 export const HomePage: React.FC<HomePageProps> = ({
   onStartRiskCheck,
   onLearnMore,
+  onOpenSettings,
   onOpenAICopilot,
   onNavigateToProPortal,
 }) => {
@@ -99,16 +102,37 @@ export const HomePage: React.FC<HomePageProps> = ({
       icon: GitCompare,
       color: 'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/80',
     },
+    {
+      id: 'settings',
+      title: 'Settings & Decision Cutoffs',
+      desc: 'Actuarial threshold calibration, baseline loss margins & visual preferences.',
+      icon: SettingsIcon,
+      color: 'text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800',
+    },
   ];
 
   return (
     <div className="space-y-10 sm:space-y-14 max-w-5xl mx-auto pb-12 px-3 sm:px-6">
       {/* HERO SECTION */}
       <section className="text-center pt-6 sm:pt-10 space-y-6">
-        {/* Friendly trust badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-semibold tracking-wide shadow-xs">
-          <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-          <span>Quick, Free &amp; Private Risk Assessment</span>
+        {/* Friendly trust badge & Quick settings */}
+        <div className="flex items-center justify-center gap-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/70 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs sm:text-sm font-semibold tracking-wide shadow-xs">
+            <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+            <span>Quick, Free &amp; Private Risk Assessment</span>
+          </div>
+          {onOpenSettings && (
+            <button
+              type="button"
+              id="top-quick-settings-btn"
+              onClick={onOpenSettings}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+              title="Open Settings & Preferences"
+            >
+              <SettingsIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+              <span>Settings</span>
+            </button>
+          )}
         </div>
 
         {/* Main Heading */}
@@ -121,7 +145,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           Check your estimated claim risk in a few simple steps.
         </p>
 
-        {/* Primary CTA */}
+        {/* Primary CTA with Settings Button */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
           <button
             type="button"
@@ -141,6 +165,18 @@ export const HomePage: React.FC<HomePageProps> = ({
             >
               <HelpCircle className="w-5 h-5 text-slate-400" />
               <span>How It Works</span>
+            </button>
+          )}
+
+          {onOpenSettings && (
+            <button
+              type="button"
+              id="hero-settings-btn"
+              onClick={onOpenSettings}
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-base transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs min-h-[56px] touch-manipulation"
+            >
+              <SettingsIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+              <span>Settings</span>
             </button>
           )}
         </div>

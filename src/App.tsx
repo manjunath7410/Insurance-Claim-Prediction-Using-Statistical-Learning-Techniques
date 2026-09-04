@@ -6,6 +6,7 @@ import { HelpAboutPage } from './components/pages/HelpAboutPage';
 import { PredictionPage } from './components/pages/PredictionPage';
 import { CustomerResultsPage } from './components/pages/CustomerResultsPage';
 import { CustomerExplainPage } from './components/pages/CustomerExplainPage';
+import { SettingsPage } from './components/pages/SettingsPage';
 import {
   ProfessionalWorkspace,
   ProTabKey,
@@ -83,23 +84,46 @@ export default function App() {
   });
 
   useEffect(() => {
+    const root = document.documentElement;
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
     const applyTheme = () => {
-      const root = document.documentElement;
-      if (theme === 'dark') {
+      const isDark =
+        theme === 'dark' || (theme === 'system' && mediaQuery.matches);
+
+      if (isDark) {
         root.classList.add('dark');
-      } else if (theme === 'light') {
-        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'dark');
+        root.style.colorScheme = 'dark';
       } else {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
+        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'light');
+        root.style.colorScheme = 'light';
       }
     };
 
     applyTheme();
     localStorage.setItem('app_theme_mode', theme);
+
+    const handleMediaChange = () => {
+      if (theme === 'system') {
+        applyTheme();
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    } else {
+      mediaQuery.addListener(handleMediaChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      } else {
+        mediaQuery.removeListener(handleMediaChange);
+      }
+    };
   }, [theme]);
 
   useEffect(() => {
@@ -233,6 +257,10 @@ export default function App() {
               <HomePage
                 onStartRiskCheck={() => setActiveTab('prediction')}
                 onLearnMore={() => setActiveTab('help-about')}
+                onOpenSettings={() => {
+                  setExperienceMode('professional');
+                  setActiveProTab('settings');
+                }}
                 onOpenAICopilot={() => handleOpenAICopilot()}
                 onNavigateToProPortal={(proTab) => {
                   setExperienceMode('professional');
@@ -246,11 +274,21 @@ export default function App() {
                     else if (proTab === 'diagnostics-drift') setActiveProTab('diagnostics-drift');
                     else if (proTab === 'audit-governance') setActiveProTab('audit-governance');
                     else if (proTab === 'scenario') setActiveProTab('scenario');
+                    else if (proTab === 'settings') setActiveProTab('settings');
                     else setActiveProTab('models');
                   } else {
                     setActiveProTab('models');
                   }
                 }}
+              />
+            )}
+
+            {activeTab === 'settings' && (
+              <SettingsPage
+                theme={theme}
+                onThemeChange={setTheme}
+                decisionThreshold={decisionThreshold}
+                onDecisionThresholdChange={setDecisionThreshold}
               />
             )}
 
